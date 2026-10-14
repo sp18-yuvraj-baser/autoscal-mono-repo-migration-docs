@@ -11,10 +11,14 @@
             "id": "24c376a61cd63455",
             "type": "leaf",
             "state": {
-              "type": "empty",
-              "state": {},
+              "type": "markdown",
+              "state": {
+                "file": "current-db-arch/auth-service-node.md",
+                "mode": "source",
+                "source": false
+              },
               "icon": "lucide-file",
-              "title": "New tab"
+              "title": "auth-service-node"
             }
           }
         ]
@@ -183,6 +187,8 @@
   },
   "active": "24c376a61cd63455",
   "lastOpenFiles": [
+    "current-db-arch/job-service-node.md",
+    "current-db-arch/auth-service-node.md",
     "current-db-arch/job-service-node",
     "current-db-arch"
   ]
