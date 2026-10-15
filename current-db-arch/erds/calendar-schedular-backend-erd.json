@@ -1,0 +1,586 @@
+{
+  "service": "calendar-schedular-backend",
+  "generatedAt": "2026-10-15T09:29:51.504Z",
+  "stats": {
+    "totalTables": 14,
+    "physicalRelationships": 14,
+    "conceptualRelationships": 0,
+    "inferredRelationships": 2,
+    "totalRelationships": 16,
+    "modules": 8,
+    "isolatedTables": 0,
+    "cardinalityBreakdown": {
+      "1:n": 13,
+      "1:1": 3
+    },
+    "statusBreakdown": {
+      "active": 14
+    }
+  },
+  "hub": "public.Event",
+  "modules": [
+    "Users and Organisations",
+    "Events, Schedules and Invitee Questions",
+    "Bookings and Slots",
+    "Payments and Payouts",
+    "Calendar and Video Integrations",
+    "Tenant Webhooks and Redirects (CVT)",
+    "Job-Service Sync",
+    "Delivery Outbox"
+  ],
+  "nodes": [
+    {
+      "id": "public.Organisation",
+      "name": "Organisation",
+      "description": "tenant boundary for hosts. Personal organisations are auto-created per user; Business organisations are created by auth-service and may hold an API public key for the signed v1 API.",
+      "modules": [
+        "Users and Organisations",
+        "Bookings and Slots",
+        "Job-Service Sync"
+      ],
+      "ownerModule": "Users and Organisations",
+      "status": "active",
+      "isolated": false,
+      "externalRefs": [
+        {
+          "target": "auth-service tenants",
+          "columns": "calendar_organisation_id, calendar_api_key",
+          "cardinality": "1 : 0..1 (inferred)",
+          "enforcement": "not enforced"
+        }
+      ],
+      "evidence": [
+        "current-db-arch/calendar-schedular-backend.md#table-organisation"
+      ]
+    },
+    {
+      "id": "public.users",
+      "name": "users",
+      "description": "host account. Holds login credentials, public link, OAuth refresh tokens, Stripe Connect id, wallet balance and payout commission.",
+      "modules": [
+        "Users and Organisations",
+        "Events, Schedules and Invitee Questions",
+        "Bookings and Slots",
+        "Payments and Payouts",
+        "Calendar and Video Integrations",
+        "Job-Service Sync",
+        "Delivery Outbox"
+      ],
+      "ownerModule": "Users and Organisations",
+      "status": "active",
+      "isolated": false,
+      "externalRefs": [
+        {
+          "target": "job-service team_members",
+          "columns": "calendar_user_id",
+          "cardinality": "1 : 0..1 (inferred)",
+          "enforcement": "not enforced"
+        }
+      ],
+      "evidence": [
+        "current-db-arch/calendar-schedular-backend.md#table-users"
+      ]
+    },
+    {
+      "id": "public.Schedule",
+      "name": "Schedule",
+      "description": "a named availability set with an IANA time zone. One per user is isDefault; isCustom schedules are private to a single event and deleted when the event moves to another schedule.",
+      "modules": [
+        "Users and Organisations",
+        "Events, Schedules and Invitee Questions",
+        "Bookings and Slots",
+        "Job-Service Sync",
+        "Delivery Outbox"
+      ],
+      "ownerModule": "Events, Schedules and Invitee Questions",
+      "status": "active",
+      "isolated": false,
+      "externalRefs": [],
+      "evidence": [
+        "current-db-arch/calendar-schedular-backend.md#table-schedule"
+      ]
+    },
+    {
+      "id": "public.Availability",
+      "name": "Availability",
+      "description": "one row per weekday (type = WeekDay, day set) or per date override (type = Date, date set) within a schedule. A weekday row without times means unavailable that day.",
+      "modules": [
+        "Users and Organisations",
+        "Events, Schedules and Invitee Questions",
+        "Bookings and Slots",
+        "Job-Service Sync"
+      ],
+      "ownerModule": "Events, Schedules and Invitee Questions",
+      "status": "active",
+      "isolated": false,
+      "externalRefs": [],
+      "evidence": [
+        "current-db-arch/calendar-schedular-backend.md#table-availability"
+      ]
+    },
+    {
+      "id": "public.AvailabilityTimes",
+      "name": "AvailabilityTimes",
+      "description": "start and end time windows within an availability row.",
+      "modules": [
+        "Users and Organisations",
+        "Events, Schedules and Invitee Questions",
+        "Bookings and Slots",
+        "Job-Service Sync"
+      ],
+      "ownerModule": "Events, Schedules and Invitee Questions",
+      "status": "active",
+      "isolated": false,
+      "externalRefs": [],
+      "evidence": [
+        "current-db-arch/calendar-schedular-backend.md#table-availabilitytimes"
+      ]
+    },
+    {
+      "id": "public.Event",
+      "name": "Event",
+      "description": "a bookable event type owned by a host: duration, buffers, booking window, capacity, location, price, visibility.",
+      "modules": [
+        "Users and Organisations",
+        "Events, Schedules and Invitee Questions",
+        "Bookings and Slots",
+        "Payments and Payouts",
+        "Calendar and Video Integrations",
+        "Tenant Webhooks and Redirects (CVT)",
+        "Job-Service Sync",
+        "Delivery Outbox"
+      ],
+      "ownerModule": "Events, Schedules and Invitee Questions",
+      "status": "active",
+      "isolated": false,
+      "externalRefs": [
+        {
+          "target": "job-service team_members",
+          "columns": "calendar_event_id, calendar_event_link",
+          "cardinality": "1 : 0..1 (inferred)",
+          "enforcement": "not enforced"
+        }
+      ],
+      "evidence": [
+        "current-db-arch/calendar-schedular-backend.md#table-event"
+      ]
+    },
+    {
+      "id": "public.InviteeQuestion",
+      "name": "InviteeQuestion",
+      "description": "custom questions shown on the booking form; answers are stored in Booking.inviteeResponse.",
+      "modules": [
+        "Events, Schedules and Invitee Questions",
+        "Job-Service Sync"
+      ],
+      "ownerModule": "Events, Schedules and Invitee Questions",
+      "status": "active",
+      "isolated": false,
+      "externalRefs": [],
+      "evidence": [
+        "current-db-arch/calendar-schedular-backend.md#table-inviteequestion"
+      ]
+    },
+    {
+      "id": "public.Booking",
+      "name": "Booking",
+      "description": "one invitee's reservation of one slot of an event, with answers, status and optional meeting and payment.",
+      "modules": [
+        "Events, Schedules and Invitee Questions",
+        "Bookings and Slots",
+        "Payments and Payouts",
+        "Calendar and Video Integrations",
+        "Delivery Outbox"
+      ],
+      "ownerModule": "Bookings and Slots",
+      "status": "active",
+      "isolated": false,
+      "externalRefs": [],
+      "evidence": [
+        "current-db-arch/calendar-schedular-backend.md#table-booking"
+      ]
+    },
+    {
+      "id": "public.Meeting",
+      "name": "Meeting",
+      "description": "the conference or location record for one event slot and location type; shared by all bookings in that slot. Holds Zoom and Google Calendar ids and URLs.",
+      "modules": [
+        "Events, Schedules and Invitee Questions",
+        "Bookings and Slots",
+        "Payments and Payouts",
+        "Calendar and Video Integrations",
+        "Delivery Outbox"
+      ],
+      "ownerModule": "Bookings and Slots",
+      "status": "active",
+      "isolated": false,
+      "externalRefs": [],
+      "evidence": [
+        "current-db-arch/calendar-schedular-backend.md#table-meeting"
+      ]
+    },
+    {
+      "id": "public.Payment",
+      "name": "Payment",
+      "description": "the Stripe Checkout session and its outcome for one paid booking.",
+      "modules": [
+        "Bookings and Slots",
+        "Payments and Payouts"
+      ],
+      "ownerModule": "Payments and Payouts",
+      "status": "active",
+      "isolated": false,
+      "externalRefs": [],
+      "evidence": [
+        "current-db-arch/calendar-schedular-backend.md#table-payment"
+      ]
+    },
+    {
+      "id": "public.Payout",
+      "name": "Payout",
+      "description": "a Stripe Connect transfer from the platform to a host, net of commission.",
+      "modules": [
+        "Payments and Payouts"
+      ],
+      "ownerModule": "Payments and Payouts",
+      "status": "active",
+      "isolated": false,
+      "externalRefs": [],
+      "evidence": [
+        "current-db-arch/calendar-schedular-backend.md#table-payout"
+      ]
+    },
+    {
+      "id": "public.Webhook",
+      "name": "Webhook",
+      "description": "one outbound webhook endpoint per event, called when a booking is confirmed.",
+      "modules": [
+        "Bookings and Slots",
+        "Payments and Payouts",
+        "Tenant Webhooks and Redirects (CVT)",
+        "Delivery Outbox"
+      ],
+      "ownerModule": "Tenant Webhooks and Redirects (CVT)",
+      "status": "active",
+      "isolated": false,
+      "externalRefs": [],
+      "evidence": [
+        "current-db-arch/calendar-schedular-backend.md#table-webhook"
+      ]
+    },
+    {
+      "id": "public.Redirect",
+      "name": "Redirect",
+      "description": "optional URL the invitee is sent to after booking.",
+      "modules": [
+        "Bookings and Slots",
+        "Tenant Webhooks and Redirects (CVT)"
+      ],
+      "ownerModule": "Tenant Webhooks and Redirects (CVT)",
+      "status": "active",
+      "isolated": false,
+      "externalRefs": [],
+      "evidence": [
+        "current-db-arch/calendar-schedular-backend.md#table-redirect"
+      ]
+    },
+    {
+      "id": "public.Delivery",
+      "name": "Delivery",
+      "description": "outbox row for one booking mail or one tenant webhook call.",
+      "modules": [
+        "Bookings and Slots",
+        "Payments and Payouts",
+        "Tenant Webhooks and Redirects (CVT)",
+        "Delivery Outbox"
+      ],
+      "ownerModule": "Delivery Outbox",
+      "status": "active",
+      "isolated": false,
+      "externalRefs": [],
+      "evidence": [
+        "current-db-arch/calendar-schedular-backend.md#table-delivery"
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "id": "users_organisationId_fkey",
+      "source": "public.Organisation",
+      "target": "public.users",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "organisationId",
+      "enforced": true,
+      "constraintName": "users_organisationId_fkey",
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/calendar-schedular-backend.md#table-users"
+      ],
+      "docCardinality": "1 : N",
+      "enforcement": "FK users_organisationId_fkey"
+    },
+    {
+      "id": "Schedule_userId_fkey",
+      "source": "public.users",
+      "target": "public.Schedule",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "userId",
+      "enforced": true,
+      "constraintName": "Schedule_userId_fkey",
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/calendar-schedular-backend.md#table-schedule"
+      ],
+      "docCardinality": "1 : N",
+      "enforcement": "FK Schedule_userId_fkey"
+    },
+    {
+      "id": "Event_userId_fkey",
+      "source": "public.users",
+      "target": "public.Event",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "userId",
+      "enforced": true,
+      "constraintName": "Event_userId_fkey",
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/calendar-schedular-backend.md#table-event"
+      ],
+      "docCardinality": "1 : N",
+      "enforcement": "FK Event_userId_fkey"
+    },
+    {
+      "id": "Payout_userId_fkey",
+      "source": "public.users",
+      "target": "public.Payout",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "userId",
+      "enforced": true,
+      "constraintName": "Payout_userId_fkey",
+      "onDelete": "RESTRICT",
+      "evidence": [
+        "current-db-arch/calendar-schedular-backend.md#table-payout"
+      ],
+      "docCardinality": "1 : N",
+      "enforcement": "FK Payout_userId_fkey"
+    },
+    {
+      "id": "Availability_scheduleId_fkey",
+      "source": "public.Schedule",
+      "target": "public.Availability",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "scheduleId",
+      "enforced": true,
+      "constraintName": "Availability_scheduleId_fkey",
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/calendar-schedular-backend.md#table-availability"
+      ],
+      "docCardinality": "1 : N",
+      "enforcement": "FK Availability_scheduleId_fkey"
+    },
+    {
+      "id": "Event_scheduleId_fkey",
+      "source": "public.Schedule",
+      "target": "public.Event",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "scheduleId",
+      "enforced": true,
+      "constraintName": "Event_scheduleId_fkey",
+      "onDelete": "RESTRICT",
+      "evidence": [
+        "current-db-arch/calendar-schedular-backend.md#table-event"
+      ],
+      "docCardinality": "1 : N",
+      "enforcement": "FK Event_scheduleId_fkey"
+    },
+    {
+      "id": "AvailabilityTimes_availabilityId_fkey",
+      "source": "public.Availability",
+      "target": "public.AvailabilityTimes",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "availabilityId",
+      "enforced": true,
+      "constraintName": "AvailabilityTimes_availabilityId_fkey",
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/calendar-schedular-backend.md#table-availabilitytimes"
+      ],
+      "docCardinality": "1 : N",
+      "enforcement": "FK AvailabilityTimes_availabilityId_fkey"
+    },
+    {
+      "id": "InviteeQuestion_eventId_fkey",
+      "source": "public.Event",
+      "target": "public.InviteeQuestion",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "eventId",
+      "enforced": true,
+      "constraintName": "InviteeQuestion_eventId_fkey",
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/calendar-schedular-backend.md#table-inviteequestion"
+      ],
+      "docCardinality": "1 : N",
+      "enforcement": "FK InviteeQuestion_eventId_fkey"
+    },
+    {
+      "id": "Booking_eventId_fkey",
+      "source": "public.Event",
+      "target": "public.Booking",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "eventId",
+      "enforced": true,
+      "constraintName": "Booking_eventId_fkey",
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/calendar-schedular-backend.md#table-booking"
+      ],
+      "docCardinality": "1 : N",
+      "enforcement": "FK Booking_eventId_fkey"
+    },
+    {
+      "id": "Meeting_eventId_fkey",
+      "source": "public.Event",
+      "target": "public.Meeting",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "eventId",
+      "enforced": true,
+      "constraintName": "Meeting_eventId_fkey",
+      "onDelete": "SET NULL",
+      "evidence": [
+        "current-db-arch/calendar-schedular-backend.md#table-meeting"
+      ],
+      "docCardinality": "1 : N",
+      "enforcement": "FK Meeting_eventId_fkey"
+    },
+    {
+      "id": "Webhook_eventId_fkey",
+      "source": "public.Event",
+      "target": "public.Webhook",
+      "cardinality": "1:1",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "eventId",
+      "enforced": true,
+      "constraintName": "Webhook_eventId_fkey",
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/calendar-schedular-backend.md#table-webhook"
+      ],
+      "docCardinality": "1 : 0..1",
+      "enforcement": "FK Webhook_eventId_fkey"
+    },
+    {
+      "id": "Redirect_eventId_fkey",
+      "source": "public.Event",
+      "target": "public.Redirect",
+      "cardinality": "1:1",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "eventId",
+      "enforced": true,
+      "constraintName": "Redirect_eventId_fkey",
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/calendar-schedular-backend.md#table-redirect"
+      ],
+      "docCardinality": "1 : 0..1",
+      "enforcement": "FK Redirect_eventId_fkey"
+    },
+    {
+      "id": "Booking_meetingId_fkey",
+      "source": "public.Meeting",
+      "target": "public.Booking",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "meetingId",
+      "enforced": true,
+      "constraintName": "Booking_meetingId_fkey",
+      "onDelete": "SET NULL",
+      "evidence": [
+        "current-db-arch/calendar-schedular-backend.md#table-booking"
+      ],
+      "docCardinality": "N : 0..1",
+      "enforcement": "FK Booking_meetingId_fkey"
+    },
+    {
+      "id": "Payment_bookingId_fkey",
+      "source": "public.Booking",
+      "target": "public.Payment",
+      "cardinality": "1:1",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "bookingId",
+      "enforced": true,
+      "constraintName": "Payment_bookingId_fkey",
+      "onDelete": "RESTRICT",
+      "evidence": [
+        "current-db-arch/calendar-schedular-backend.md#table-payment"
+      ],
+      "docCardinality": "1 : 0..1",
+      "enforcement": "FK Payment_bookingId_fkey"
+    },
+    {
+      "id": "logical_Delivery_payload_bookingId",
+      "source": "public.Booking",
+      "target": "public.Delivery",
+      "cardinality": "1:n",
+      "kind": "logical_relationship",
+      "sourceColumn": null,
+      "targetColumn": "payload->>'bookingId'",
+      "enforced": false,
+      "constraintName": null,
+      "onDelete": null,
+      "evidence": [
+        "current-db-arch/calendar-schedular-backend.md#table-delivery"
+      ],
+      "docCardinality": "1 : N",
+      "enforcement": "not enforced"
+    },
+    {
+      "id": "logical_Delivery_payload_webhookId",
+      "source": "public.Webhook",
+      "target": "public.Delivery",
+      "cardinality": "1:n",
+      "kind": "logical_relationship",
+      "sourceColumn": null,
+      "targetColumn": "payload->>'webhookId'",
+      "enforced": false,
+      "constraintName": null,
+      "onDelete": null,
+      "evidence": [
+        "current-db-arch/calendar-schedular-backend.md#table-delivery"
+      ],
+      "docCardinality": "1 : N",
+      "enforcement": "not enforced"
+    }
+  ],
+  "unresolved": [
+    "Logical, not drawn as an edge: users <-> Payout: stripeId copied to Payout.destinationId [value copy]; not enforced",
+    "Logical, not drawn as an edge: InviteeQuestion <-> Booking: answers in Booking.inviteeResponse JSONB [n/a]; not enforced, not keyed by question id (not verified)",
+    "Logical, not drawn as an edge: Booking <-> Meeting: Booking.eventId should equal Meeting.eventId [n/a]; not enforced",
+    "Logical, not drawn as an edge: Payout <-> users: destinationId copies users.stripeId [value copy]; not enforced"
+  ]
+}

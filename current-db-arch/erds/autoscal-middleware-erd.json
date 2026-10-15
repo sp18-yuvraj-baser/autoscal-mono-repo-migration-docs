@@ -1,0 +1,129 @@
+{
+  "service": "autoscal-middleware",
+  "generatedAt": "2026-10-15T09:29:51.423Z",
+  "stats": {
+    "totalTables": 2,
+    "physicalRelationships": 1,
+    "conceptualRelationships": 0,
+    "inferredRelationships": 0,
+    "totalRelationships": 1,
+    "modules": 10,
+    "isolatedTables": 0,
+    "cardinalityBreakdown": {
+      "1:n": 1
+    },
+    "statusBreakdown": {
+      "active": 2
+    }
+  },
+  "hub": "public.SlackUser",
+  "modules": [
+    "Slack install and token management",
+    "Slack login and logout",
+    "Slack events and App Home",
+    "Slash commands",
+    "Slack interactions",
+    "Scheduled notifications",
+    "Slack users API",
+    "Tenant backfill script",
+    "AI assistant",
+    "Service clients and views"
+  ],
+  "nodes": [
+    {
+      "id": "public.SlackTeam",
+      "name": "SlackTeam",
+      "description": "One row per Slack workspace that installed the Autoscal app. Stores the workspace id, bot access token, refresh token, install status and the Autoscal tenant the workspace is bound to.",
+      "modules": [
+        "Slack install and token management",
+        "Slack login and logout",
+        "Slack events and App Home",
+        "Slash commands",
+        "Slack interactions",
+        "Scheduled notifications",
+        "Tenant backfill script"
+      ],
+      "ownerModule": "Slack install and token management",
+      "status": "active",
+      "isolated": false,
+      "externalRefs": [
+        {
+          "target": "auth-service tenants",
+          "columns": "SlackTeam.tenantId → tenants.id (UUID both sides)",
+          "cardinality": "N teams : 1 tenant",
+          "enforcement": "No (different database). Inferred from autoscalUser.tenant_id source, slackLogin.controller.ts:37 and auth-service users.controller.js:1173-1182"
+        }
+      ],
+      "evidence": [
+        "current-db-arch/autoscal-middleware.md#tbl-slackteam"
+      ]
+    },
+    {
+      "id": "public.SlackUser",
+      "name": "SlackUser",
+      "description": "One row per Slack user per workspace who has interacted with the app.",
+      "modules": [
+        "Slack install and token management",
+        "Slack login and logout",
+        "Slack events and App Home",
+        "Slash commands",
+        "Slack interactions",
+        "Scheduled notifications",
+        "Slack users API",
+        "Tenant backfill script"
+      ],
+      "ownerModule": "Shared Tables",
+      "status": "active",
+      "isolated": false,
+      "externalRefs": [
+        {
+          "target": "auth-service users",
+          "columns": "userId (TEXT) → users.id (UUID)",
+          "cardinality": "N : 1 (one Autoscal user may link from several workspaces; not prevented)",
+          "enforcement": "No (cross-service). Evidence: slackLogin.controller.ts:47, auth users.controller.js:1179"
+        },
+        {
+          "target": "job-service team_members",
+          "columns": "employeeId (TEXT) → team_members.id (TEXT)",
+          "cardinality": "N : 1",
+          "enforcement": "No. Evidence: slackLogin.controller.ts:48, auth users.controller.js:1181, job-service sync slackUser.js:24"
+        },
+        {
+          "target": "job-service team_members",
+          "columns": "reportingManagerId (TEXT) → team_members.id",
+          "cardinality": "N : 1",
+          "enforcement": "No, inferred from the spread of getTeamMember in auth users.controller.js:1183"
+        },
+        {
+          "target": "auth-service tenants",
+          "columns": "tenantId (UUID) → tenants.id (UUID)",
+          "cardinality": "N : 1",
+          "enforcement": "No. Evidence: slackLogin.controller.ts:60"
+        }
+      ],
+      "evidence": [
+        "current-db-arch/autoscal-middleware.md#tbl-slackuser"
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "id": "SlackUser_teamId_fkey",
+      "source": "public.SlackTeam",
+      "target": "public.SlackUser",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "teamId",
+      "enforced": true,
+      "constraintName": "SlackUser_teamId_fkey",
+      "onDelete": "RESTRICT",
+      "evidence": [
+        "current-db-arch/autoscal-middleware.md#tbl-slackuser"
+      ],
+      "docCardinality": "1 team : N users",
+      "enforcement": "Yes, FK SlackUser_teamId_fkey, ON DELETE RESTRICT ON UPDATE CASCADE"
+    }
+  ],
+  "unresolved": []
+}

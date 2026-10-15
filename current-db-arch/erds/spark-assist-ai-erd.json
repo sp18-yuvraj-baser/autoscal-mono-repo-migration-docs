@@ -1,0 +1,1664 @@
+{
+  "service": "spark-assist-ai",
+  "generatedAt": "2026-10-15T09:29:59.518Z",
+  "stats": {
+    "totalTables": 42,
+    "physicalRelationships": 45,
+    "conceptualRelationships": 8,
+    "inferredRelationships": 0,
+    "totalRelationships": 53,
+    "modules": 9,
+    "isolatedTables": 12,
+    "cardinalityBreakdown": {
+      "1:n": 44,
+      "1:1": 1,
+      "m:n": 8
+    },
+    "statusBreakdown": {
+      "active": 25,
+      "uncertain": 7,
+      "legacy": 10
+    }
+  },
+  "hub": "public.api_resource",
+  "modules": [
+    "Tenants, users, roles and assistants",
+    "LLM providers and settings",
+    "Documents and embeddings",
+    "Web chat and RAG answers",
+    "Tool loop, flows and HRMS response audit",
+    "Slack chat",
+    "Tenant offboarding",
+    "Django framework",
+    "Unassigned Tables (migration 0051 backups)"
+  ],
+  "nodes": [
+    {
+      "id": "public.api_tenant",
+      "name": "api_tenant",
+      "description": "one row per Autoscal tenant, mirroring auth-service. Root of every tenant-owned row in the service.",
+      "modules": [
+        "Tenants, users, roles and assistants",
+        "LLM providers and settings",
+        "Documents and embeddings",
+        "Web chat and RAG answers",
+        "Slack chat",
+        "Tenant offboarding"
+      ],
+      "ownerModule": "Tenants, users, roles and assistants",
+      "status": "active",
+      "isolated": false,
+      "externalRefs": [
+        {
+          "target": "auth-service tenants",
+          "columns": "external_id",
+          "cardinality": "1 to 1",
+          "enforcement": "None"
+        }
+      ],
+      "evidence": [
+        "current-db-arch/spark-assist-ai.md#table-api_tenant"
+      ]
+    },
+    {
+      "id": "public.api_role",
+      "name": "api_role",
+      "description": "tenant roles mirrored from auth-service; used to grant documents to roles.",
+      "modules": [
+        "Tenants, users, roles and assistants",
+        "Documents and embeddings",
+        "Web chat and RAG answers",
+        "Slack chat",
+        "Tenant offboarding"
+      ],
+      "ownerModule": "Tenants, users, roles and assistants",
+      "status": "active",
+      "isolated": false,
+      "externalRefs": [],
+      "evidence": [
+        "current-db-arch/spark-assist-ai.md#table-api_role"
+      ]
+    },
+    {
+      "id": "public.api_user",
+      "name": "api_user",
+      "description": "tenant members mirrored from auth-service; the request.user of every session and Slack request.",
+      "modules": [
+        "Tenants, users, roles and assistants",
+        "Documents and embeddings",
+        "Web chat and RAG answers",
+        "Slack chat",
+        "Tenant offboarding"
+      ],
+      "ownerModule": "Tenants, users, roles and assistants",
+      "status": "active",
+      "isolated": false,
+      "externalRefs": [
+        {
+          "target": "auth-service employees",
+          "columns": "external_id",
+          "cardinality": "1 to 1 per tenant",
+          "enforcement": "None"
+        }
+      ],
+      "evidence": [
+        "current-db-arch/spark-assist-ai.md#table-api_user"
+      ]
+    },
+    {
+      "id": "public.api_assistant",
+      "name": "api_assistant",
+      "description": "named assistants per tenant (seeded: HR, IT, Finance per api/helpers/seed_data.py); documents can be attached to assistants for list filtering.",
+      "modules": [
+        "Tenants, users, roles and assistants",
+        "Documents and embeddings",
+        "Tenant offboarding"
+      ],
+      "ownerModule": "Tenants, users, roles and assistants",
+      "status": "active",
+      "isolated": false,
+      "externalRefs": [],
+      "evidence": [
+        "current-db-arch/spark-assist-ai.md#table-api_assistant"
+      ]
+    },
+    {
+      "id": "public.api_llmprovider",
+      "name": "api_llmprovider",
+      "description": "one configured LLM provider account per row, with its encrypted API key.",
+      "modules": [
+        "LLM providers and settings",
+        "Documents and embeddings",
+        "Web chat and RAG answers",
+        "Tool loop, flows and HRMS response audit",
+        "Slack chat",
+        "Tenant offboarding"
+      ],
+      "ownerModule": "LLM providers and settings",
+      "status": "active",
+      "isolated": false,
+      "externalRefs": [],
+      "evidence": [
+        "current-db-arch/spark-assist-ai.md#table-api_llmprovider"
+      ]
+    },
+    {
+      "id": "public.api_llmchatmodel",
+      "name": "api_llmchatmodel",
+      "description": "chat model catalogue per provider, seeded from api/helpers/llm_models_seeder.py:9-60.",
+      "modules": [
+        "LLM providers and settings",
+        "Web chat and RAG answers",
+        "Tool loop, flows and HRMS response audit",
+        "Slack chat",
+        "Tenant offboarding"
+      ],
+      "ownerModule": "LLM providers and settings",
+      "status": "active",
+      "isolated": false,
+      "externalRefs": [],
+      "evidence": [
+        "current-db-arch/spark-assist-ai.md#table-api_llmchatmodel"
+      ]
+    },
+    {
+      "id": "public.api_llmembeddingmodel",
+      "name": "api_llmembeddingmodel",
+      "description": "embedding model catalogue per provider, with its vector dimension.",
+      "modules": [
+        "LLM providers and settings",
+        "Documents and embeddings",
+        "Web chat and RAG answers",
+        "Slack chat",
+        "Tenant offboarding"
+      ],
+      "ownerModule": "LLM providers and settings",
+      "status": "active",
+      "isolated": false,
+      "externalRefs": [],
+      "evidence": [
+        "current-db-arch/spark-assist-ai.md#table-api_llmembeddingmodel"
+      ]
+    },
+    {
+      "id": "public.api_tenantllmsetting",
+      "name": "api_tenantllmsetting",
+      "description": "the tenant's selected provider, chat model and embedding model. At most one enabled row per tenant; the previous selection is kept disabled.",
+      "modules": [
+        "LLM providers and settings",
+        "Documents and embeddings",
+        "Web chat and RAG answers",
+        "Tool loop, flows and HRMS response audit",
+        "Slack chat",
+        "Tenant offboarding"
+      ],
+      "ownerModule": "LLM providers and settings",
+      "status": "active",
+      "isolated": false,
+      "externalRefs": [],
+      "evidence": [
+        "current-db-arch/spark-assist-ai.md#table-api_tenantllmsetting"
+      ]
+    },
+    {
+      "id": "public.api_resource",
+      "name": "api_resource",
+      "description": "one uploaded policy document: file metadata, processing state, access grants, version link.",
+      "modules": [
+        "Documents and embeddings",
+        "Web chat and RAG answers",
+        "Slack chat",
+        "Tenant offboarding"
+      ],
+      "ownerModule": "Documents and embeddings",
+      "status": "active",
+      "isolated": false,
+      "externalRefs": [
+        {
+          "target": "S3",
+          "columns": "id, name build object keys",
+          "cardinality": "1 to 2 objects",
+          "enforcement": "None"
+        }
+      ],
+      "evidence": [
+        "current-db-arch/spark-assist-ai.md#table-api_resource"
+      ]
+    },
+    {
+      "id": "public.api_resource_roles",
+      "name": "api_resource_roles",
+      "description": "grants a document to roles.",
+      "modules": [
+        "Documents and embeddings",
+        "Web chat and RAG answers",
+        "Slack chat",
+        "Tenant offboarding"
+      ],
+      "ownerModule": "Documents and embeddings",
+      "status": "active",
+      "isolated": false,
+      "externalRefs": [],
+      "evidence": [
+        "current-db-arch/spark-assist-ai.md#table-api_resource_roles"
+      ]
+    },
+    {
+      "id": "public.api_resource_specific_users",
+      "name": "api_resource_specific_users",
+      "description": "grants a document to individual members.",
+      "modules": [
+        "Documents and embeddings",
+        "Web chat and RAG answers",
+        "Slack chat",
+        "Tenant offboarding"
+      ],
+      "ownerModule": "Documents and embeddings",
+      "status": "active",
+      "isolated": false,
+      "externalRefs": [],
+      "evidence": [
+        "current-db-arch/spark-assist-ai.md#table-api_resource_specific_users"
+      ]
+    },
+    {
+      "id": "public.api_resource_assistants",
+      "name": "api_resource_assistants",
+      "description": "attaches a document to assistants; used to filter the document list.",
+      "modules": [
+        "Documents and embeddings",
+        "Tenant offboarding"
+      ],
+      "ownerModule": "Documents and embeddings",
+      "status": "active",
+      "isolated": false,
+      "externalRefs": [],
+      "evidence": [
+        "current-db-arch/spark-assist-ai.md#table-api_resource_assistants"
+      ]
+    },
+    {
+      "id": "public.api_resourcepage",
+      "name": "api_resourcepage",
+      "description": "extracted text of one page (chunk) of a document; source text for embeddings and citations.",
+      "modules": [
+        "LLM providers and settings",
+        "Documents and embeddings",
+        "Web chat and RAG answers",
+        "Slack chat",
+        "Tenant offboarding"
+      ],
+      "ownerModule": "Documents and embeddings",
+      "status": "active",
+      "isolated": false,
+      "externalRefs": [],
+      "evidence": [
+        "current-db-arch/spark-assist-ai.md#table-api_resourcepage"
+      ]
+    },
+    {
+      "id": "public.api_documentembedding",
+      "name": "api_documentembedding",
+      "description": "one embedding vector per page per embedding model; searched by cosine distance.",
+      "modules": [
+        "LLM providers and settings",
+        "Documents and embeddings",
+        "Web chat and RAG answers",
+        "Slack chat",
+        "Tenant offboarding"
+      ],
+      "ownerModule": "Documents and embeddings",
+      "status": "active",
+      "isolated": false,
+      "externalRefs": [],
+      "evidence": [
+        "current-db-arch/spark-assist-ai.md#table-api_documentembedding"
+      ]
+    },
+    {
+      "id": "public.api_suggestion",
+      "name": "api_suggestion",
+      "description": "LLM-generated sample questions per document, shown as chat suggestions.",
+      "modules": [
+        "Documents and embeddings",
+        "Web chat and RAG answers",
+        "Tenant offboarding"
+      ],
+      "ownerModule": "Documents and embeddings",
+      "status": "active",
+      "isolated": false,
+      "externalRefs": [],
+      "evidence": [
+        "current-db-arch/spark-assist-ai.md#table-api_suggestion"
+      ]
+    },
+    {
+      "id": "public.api_chat",
+      "name": "api_chat",
+      "description": "one web conversation owned by a member.",
+      "modules": [
+        "Web chat and RAG answers",
+        "Tool loop, flows and HRMS response audit",
+        "Tenant offboarding"
+      ],
+      "ownerModule": "Web chat and RAG answers",
+      "status": "active",
+      "isolated": false,
+      "externalRefs": [],
+      "evidence": [
+        "current-db-arch/spark-assist-ai.md#table-api_chat"
+      ]
+    },
+    {
+      "id": "public.api_chathistory",
+      "name": "api_chathistory",
+      "description": "transcript messages of a web chat, user and assistant sides.",
+      "modules": [
+        "Web chat and RAG answers",
+        "Tenant offboarding"
+      ],
+      "ownerModule": "Web chat and RAG answers",
+      "status": "active",
+      "isolated": false,
+      "externalRefs": [
+        {
+          "target": "finance-service attachments",
+          "columns": "ids in attachments",
+          "cardinality": "",
+          "enforcement": "None"
+        }
+      ],
+      "evidence": [
+        "current-db-arch/spark-assist-ai.md#table-api_chathistory"
+      ]
+    },
+    {
+      "id": "public.api_chathistoryresourcepage",
+      "name": "api_chathistoryresourcepage",
+      "description": "citations: which document pages an assistant message used.",
+      "modules": [
+        "Web chat and RAG answers",
+        "Tenant offboarding"
+      ],
+      "ownerModule": "Web chat and RAG answers",
+      "status": "active",
+      "isolated": false,
+      "externalRefs": [],
+      "evidence": [
+        "current-db-arch/spark-assist-ai.md#table-api_chathistoryresourcepage"
+      ]
+    },
+    {
+      "id": "public.api_chatsummary",
+      "name": "api_chatsummary",
+      "description": "rolling LLM summary of a chat, fed to later tool-calling turns.",
+      "modules": [
+        "Web chat and RAG answers",
+        "Tenant offboarding"
+      ],
+      "ownerModule": "Web chat and RAG answers",
+      "status": "active",
+      "isolated": false,
+      "externalRefs": [],
+      "evidence": [
+        "current-db-arch/spark-assist-ai.md#table-api_chatsummary"
+      ]
+    },
+    {
+      "id": "public.api_chatapiresponse",
+      "name": "api_chatapiresponse",
+      "description": "raw HRMS API responses captured per chat turn, for debugging and audit.",
+      "modules": [
+        "Web chat and RAG answers",
+        "Tool loop, flows and HRMS response audit",
+        "Tenant offboarding"
+      ],
+      "ownerModule": "Tool loop, flows and HRMS response audit",
+      "status": "active",
+      "isolated": false,
+      "externalRefs": [],
+      "evidence": [
+        "current-db-arch/spark-assist-ai.md#table-api_chatapiresponse"
+      ]
+    },
+    {
+      "id": "public.api_slackchathistory",
+      "name": "api_slackchathistory",
+      "description": "flat per-user Slack transcript (no conversation object).",
+      "modules": [
+        "Slack chat",
+        "Tenant offboarding"
+      ],
+      "ownerModule": "Slack chat",
+      "status": "active",
+      "isolated": false,
+      "externalRefs": [],
+      "evidence": [
+        "current-db-arch/spark-assist-ai.md#table-api_slackchathistory"
+      ]
+    },
+    {
+      "id": "public.api_slackchathistoryresourcepage",
+      "name": "api_slackchathistoryresourcepage",
+      "description": "citations for Slack answers.",
+      "modules": [
+        "Slack chat",
+        "Tenant offboarding"
+      ],
+      "ownerModule": "Slack chat",
+      "status": "active",
+      "isolated": false,
+      "externalRefs": [],
+      "evidence": [
+        "current-db-arch/spark-assist-ai.md#table-api_slackchathistoryresourcepage"
+      ]
+    },
+    {
+      "id": "public.django_migrations",
+      "name": "django_migrations",
+      "description": "ledger of applied migrations; read and written by migrate on every container start (start.sh). Must be copied with the data or rebuilt with --fake when the schema moves.",
+      "modules": [
+        "Django framework"
+      ],
+      "ownerModule": "Django framework",
+      "status": "active",
+      "isolated": true,
+      "externalRefs": [],
+      "evidence": [
+        "current-db-arch/spark-assist-ai.md#table-django_migrations"
+      ]
+    },
+    {
+      "id": "public.django_content_type",
+      "name": "django_content_type",
+      "description": "registry of models; rows created by the post_migrate signal. Source: django.contrib.contenttypes.",
+      "modules": [
+        "Django framework"
+      ],
+      "ownerModule": "Django framework",
+      "status": "active",
+      "isolated": false,
+      "externalRefs": [],
+      "evidence": [
+        "current-db-arch/spark-assist-ai.md#table-django_content_type"
+      ]
+    },
+    {
+      "id": "public.auth_permission",
+      "name": "auth_permission",
+      "description": "default add/change/delete/view permissions per model, created by post_migrate. Source: django.contrib.auth.",
+      "modules": [
+        "Django framework"
+      ],
+      "ownerModule": "Django framework",
+      "status": "active",
+      "isolated": false,
+      "externalRefs": [],
+      "evidence": [
+        "current-db-arch/spark-assist-ai.md#table-auth_permission"
+      ]
+    },
+    {
+      "id": "public.auth_group",
+      "name": "auth_group",
+      "description": "Django auth groups. No app reference.",
+      "modules": [
+        "Django framework"
+      ],
+      "ownerModule": "Django framework",
+      "status": "uncertain",
+      "isolated": false,
+      "externalRefs": [],
+      "evidence": [
+        "current-db-arch/spark-assist-ai.md#table-auth_group"
+      ]
+    },
+    {
+      "id": "public.auth_group_permissions",
+      "name": "auth_group_permissions",
+      "description": "junction group to permission.",
+      "modules": [
+        "Django framework"
+      ],
+      "ownerModule": "Django framework",
+      "status": "uncertain",
+      "isolated": false,
+      "externalRefs": [],
+      "evidence": [
+        "current-db-arch/spark-assist-ai.md#table-auth_group_permissions"
+      ]
+    },
+    {
+      "id": "public.auth_user",
+      "name": "auth_user",
+      "description": "Django admin accounts. Unrelated to api_user. No app reference.",
+      "modules": [
+        "Django framework"
+      ],
+      "ownerModule": "Django framework",
+      "status": "uncertain",
+      "isolated": false,
+      "externalRefs": [],
+      "evidence": [
+        "current-db-arch/spark-assist-ai.md#table-auth_user"
+      ]
+    },
+    {
+      "id": "public.auth_user_groups",
+      "name": "auth_user_groups",
+      "description": "junction admin user to group.",
+      "modules": [
+        "Django framework"
+      ],
+      "ownerModule": "Django framework",
+      "status": "uncertain",
+      "isolated": false,
+      "externalRefs": [],
+      "evidence": [
+        "current-db-arch/spark-assist-ai.md#table-auth_user_groups"
+      ]
+    },
+    {
+      "id": "public.auth_user_user_permissions",
+      "name": "auth_user_user_permissions",
+      "description": "junction admin user to permission.",
+      "modules": [
+        "Django framework"
+      ],
+      "ownerModule": "Django framework",
+      "status": "uncertain",
+      "isolated": false,
+      "externalRefs": [],
+      "evidence": [
+        "current-db-arch/spark-assist-ai.md#table-auth_user_user_permissions"
+      ]
+    },
+    {
+      "id": "public.django_admin_log",
+      "name": "django_admin_log",
+      "description": "admin change log. No models are registered, so new rows are not expected.",
+      "modules": [
+        "Django framework"
+      ],
+      "ownerModule": "Django framework",
+      "status": "uncertain",
+      "isolated": false,
+      "externalRefs": [],
+      "evidence": [
+        "current-db-arch/spark-assist-ai.md#table-django_admin_log"
+      ]
+    },
+    {
+      "id": "public.django_session",
+      "name": "django_session",
+      "description": "database session store (default engine).",
+      "modules": [
+        "Django framework"
+      ],
+      "ownerModule": "Django framework",
+      "status": "uncertain",
+      "isolated": true,
+      "externalRefs": [],
+      "evidence": [
+        "current-db-arch/spark-assist-ai.md#table-django_session"
+      ]
+    },
+    {
+      "id": "public.api_backup_orphan_chathistoryresourcepage",
+      "name": "api_backup_orphan_chathistoryresourcepage",
+      "description": "Source api_chathistoryresourcepage, filter: rows citing pages of the orphan documents.",
+      "modules": [
+        "Unassigned Tables (migration 0051 backups)"
+      ],
+      "ownerModule": "Unassigned Tables (migration 0051 backups)",
+      "status": "legacy",
+      "isolated": true,
+      "externalRefs": [],
+      "evidence": [
+        "current-db-arch/spark-assist-ai.md#table-api_backup_orphan_chathistoryresourcepage"
+      ]
+    },
+    {
+      "id": "public.api_backup_orphan_slackchathistoryresourcepage",
+      "name": "api_backup_orphan_slackchathistoryresourcepage",
+      "description": "Source api_slackchathistoryresourcepage, same filter.",
+      "modules": [
+        "Unassigned Tables (migration 0051 backups)"
+      ],
+      "ownerModule": "Unassigned Tables (migration 0051 backups)",
+      "status": "legacy",
+      "isolated": true,
+      "externalRefs": [],
+      "evidence": [
+        "current-db-arch/spark-assist-ai.md#table-api_backup_orphan_slackchathistoryresourcepage"
+      ]
+    },
+    {
+      "id": "public.api_backup_orphan_documentembedding",
+      "name": "api_backup_orphan_documentembedding",
+      "description": "Source api_documentembedding, filter: embeddings of orphan pages (the 0050 comment says none existed at that time).",
+      "modules": [
+        "Unassigned Tables (migration 0051 backups)"
+      ],
+      "ownerModule": "Unassigned Tables (migration 0051 backups)",
+      "status": "legacy",
+      "isolated": true,
+      "externalRefs": [],
+      "evidence": [
+        "current-db-arch/spark-assist-ai.md#table-api_backup_orphan_documentembedding"
+      ]
+    },
+    {
+      "id": "public.api_backup_orphan_resourcepage",
+      "name": "api_backup_orphan_resourcepage",
+      "description": "Source api_resourcepage, filter: pages of the 8 orphan documents.",
+      "modules": [
+        "Unassigned Tables (migration 0051 backups)"
+      ],
+      "ownerModule": "Unassigned Tables (migration 0051 backups)",
+      "status": "legacy",
+      "isolated": true,
+      "externalRefs": [],
+      "evidence": [
+        "current-db-arch/spark-assist-ai.md#table-api_backup_orphan_resourcepage"
+      ]
+    },
+    {
+      "id": "public.api_backup_orphan_suggestion",
+      "name": "api_backup_orphan_suggestion",
+      "description": "Source api_suggestion, filter: suggestions of the orphan documents.",
+      "modules": [
+        "Unassigned Tables (migration 0051 backups)"
+      ],
+      "ownerModule": "Unassigned Tables (migration 0051 backups)",
+      "status": "legacy",
+      "isolated": true,
+      "externalRefs": [],
+      "evidence": [
+        "current-db-arch/spark-assist-ai.md#table-api_backup_orphan_suggestion"
+      ]
+    },
+    {
+      "id": "public.api_backup_orphan_resource_roles",
+      "name": "api_backup_orphan_resource_roles",
+      "description": "Source api_resource_roles, filter: grants of the orphan documents.",
+      "modules": [
+        "Unassigned Tables (migration 0051 backups)"
+      ],
+      "ownerModule": "Unassigned Tables (migration 0051 backups)",
+      "status": "legacy",
+      "isolated": true,
+      "externalRefs": [],
+      "evidence": [
+        "current-db-arch/spark-assist-ai.md#table-api_backup_orphan_resource_roles"
+      ]
+    },
+    {
+      "id": "public.api_backup_orphan_resource_specific_users",
+      "name": "api_backup_orphan_resource_specific_users",
+      "description": "Source api_resource_specific_users, same filter.",
+      "modules": [
+        "Unassigned Tables (migration 0051 backups)"
+      ],
+      "ownerModule": "Unassigned Tables (migration 0051 backups)",
+      "status": "legacy",
+      "isolated": true,
+      "externalRefs": [],
+      "evidence": [
+        "current-db-arch/spark-assist-ai.md#table-api_backup_orphan_resource_specific_users"
+      ]
+    },
+    {
+      "id": "public.api_backup_orphan_resource_assistants",
+      "name": "api_backup_orphan_resource_assistants",
+      "description": "Source api_resource_assistants, filter: links of the orphan documents or to the orphan assistant.",
+      "modules": [
+        "Unassigned Tables (migration 0051 backups)"
+      ],
+      "ownerModule": "Unassigned Tables (migration 0051 backups)",
+      "status": "legacy",
+      "isolated": true,
+      "externalRefs": [],
+      "evidence": [
+        "current-db-arch/spark-assist-ai.md#table-api_backup_orphan_resource_assistants"
+      ]
+    },
+    {
+      "id": "public.api_backup_orphan_resource",
+      "name": "api_backup_orphan_resource",
+      "description": "Source api_resource, filter: the 8 approved ids with tenant_id IS NULL AND uploaded_by_id IS NULL.",
+      "modules": [
+        "Unassigned Tables (migration 0051 backups)"
+      ],
+      "ownerModule": "Unassigned Tables (migration 0051 backups)",
+      "status": "legacy",
+      "isolated": true,
+      "externalRefs": [],
+      "evidence": [
+        "current-db-arch/spark-assist-ai.md#table-api_backup_orphan_resource"
+      ]
+    },
+    {
+      "id": "public.api_backup_orphan_assistant",
+      "name": "api_backup_orphan_assistant",
+      "description": "Source api_assistant, filter: the approved tenant-less assistant.",
+      "modules": [
+        "Unassigned Tables (migration 0051 backups)"
+      ],
+      "ownerModule": "Unassigned Tables (migration 0051 backups)",
+      "status": "legacy",
+      "isolated": true,
+      "externalRefs": [],
+      "evidence": [
+        "current-db-arch/spark-assist-ai.md#table-api_backup_orphan_assistant"
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "id": "fk_api_role_tenant_id",
+      "source": "public.api_tenant",
+      "target": "public.api_role",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "tenant_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/spark-assist-ai.md#table-api_role"
+      ],
+      "docCardinality": "1 to many",
+      "enforcement": "Declared FK, CASCADE (Django)"
+    },
+    {
+      "id": "fk_api_user_tenant_id",
+      "source": "public.api_tenant",
+      "target": "public.api_user",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "tenant_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/spark-assist-ai.md#table-api_user"
+      ],
+      "docCardinality": "1 to many",
+      "enforcement": "Declared FK, CASCADE (Django)"
+    },
+    {
+      "id": "fk_api_assistant_tenant_id",
+      "source": "public.api_tenant",
+      "target": "public.api_assistant",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "tenant_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/spark-assist-ai.md#table-api_assistant"
+      ],
+      "docCardinality": "1 to many",
+      "enforcement": "Declared FK, CASCADE (Django)"
+    },
+    {
+      "id": "fk_api_llmprovider_tenant_id",
+      "source": "public.api_tenant",
+      "target": "public.api_llmprovider",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "tenant_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/spark-assist-ai.md#table-api_llmprovider"
+      ],
+      "docCardinality": "1 to many",
+      "enforcement": "Declared FK, CASCADE"
+    },
+    {
+      "id": "fk_api_tenantllmsetting_tenant_id",
+      "source": "public.api_tenant",
+      "target": "public.api_tenantllmsetting",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "tenant_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/spark-assist-ai.md#table-api_tenantllmsetting"
+      ],
+      "docCardinality": "1 to many (at most 1 enabled)",
+      "enforcement": "Declared FK, CASCADE"
+    },
+    {
+      "id": "fk_api_resource_tenant_id",
+      "source": "public.api_tenant",
+      "target": "public.api_resource",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "tenant_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/spark-assist-ai.md#table-api_resource"
+      ],
+      "docCardinality": "1 to many",
+      "enforcement": "Declared FK, CASCADE"
+    },
+    {
+      "id": "fk_api_resourcepage_tenant_id",
+      "source": "public.api_tenant",
+      "target": "public.api_resourcepage",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "tenant_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/spark-assist-ai.md#table-api_resourcepage"
+      ],
+      "docCardinality": "1 to many",
+      "enforcement": "Declared FK, CASCADE"
+    },
+    {
+      "id": "fk_api_documentembedding_tenant_id",
+      "source": "public.api_tenant",
+      "target": "public.api_documentembedding",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "tenant_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/spark-assist-ai.md#table-api_documentembedding"
+      ],
+      "docCardinality": "1 to many",
+      "enforcement": "Declared FK, CASCADE"
+    },
+    {
+      "id": "fk_api_user_role_id",
+      "source": "public.api_role",
+      "target": "public.api_user",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "role_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "SET_NULL",
+      "evidence": [
+        "current-db-arch/spark-assist-ai.md#table-api_user"
+      ],
+      "docCardinality": "1 to many",
+      "enforcement": "Declared FK, SET_NULL (Django)"
+    },
+    {
+      "id": "fk_api_resource_roles_role_id",
+      "source": "public.api_role",
+      "target": "public.api_resource_roles",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "role_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/spark-assist-ai.md#table-api_resource_roles"
+      ],
+      "docCardinality": "1 to many",
+      "enforcement": "Declared FK, CASCADE"
+    },
+    {
+      "id": "fk_api_resource_uploaded_by_id",
+      "source": "public.api_user",
+      "target": "public.api_resource",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "uploaded_by_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/spark-assist-ai.md#table-api_resource"
+      ],
+      "docCardinality": "1 to many",
+      "enforcement": "Declared FK, CASCADE"
+    },
+    {
+      "id": "fk_api_resource_specific_users_user_id",
+      "source": "public.api_user",
+      "target": "public.api_resource_specific_users",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "user_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/spark-assist-ai.md#table-api_resource_specific_users"
+      ],
+      "docCardinality": "1 to many",
+      "enforcement": "Declared FK, CASCADE"
+    },
+    {
+      "id": "fk_api_chat_user_id",
+      "source": "public.api_user",
+      "target": "public.api_chat",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "user_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/spark-assist-ai.md#table-api_chat"
+      ],
+      "docCardinality": "1 to many",
+      "enforcement": "Declared FK, CASCADE"
+    },
+    {
+      "id": "fk_api_slackchathistory_user_id",
+      "source": "public.api_user",
+      "target": "public.api_slackchathistory",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "user_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/spark-assist-ai.md#table-api_slackchathistory"
+      ],
+      "docCardinality": "1 to many",
+      "enforcement": "Declared FK, CASCADE"
+    },
+    {
+      "id": "fk_api_resource_assistants_assistant_id",
+      "source": "public.api_assistant",
+      "target": "public.api_resource_assistants",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "assistant_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/spark-assist-ai.md#table-api_resource_assistants"
+      ],
+      "docCardinality": "1 to many",
+      "enforcement": "Declared FK, CASCADE"
+    },
+    {
+      "id": "fk_api_llmchatmodel_provider_id",
+      "source": "public.api_llmprovider",
+      "target": "public.api_llmchatmodel",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "provider_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/spark-assist-ai.md#table-api_llmchatmodel"
+      ],
+      "docCardinality": "1 to many",
+      "enforcement": "Declared FK, CASCADE"
+    },
+    {
+      "id": "fk_api_llmembeddingmodel_provider_id",
+      "source": "public.api_llmprovider",
+      "target": "public.api_llmembeddingmodel",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "provider_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/spark-assist-ai.md#table-api_llmembeddingmodel"
+      ],
+      "docCardinality": "1 to many",
+      "enforcement": "Declared FK, CASCADE"
+    },
+    {
+      "id": "fk_api_tenantllmsetting_provider_id",
+      "source": "public.api_llmprovider",
+      "target": "public.api_tenantllmsetting",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "provider_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/spark-assist-ai.md#table-api_tenantllmsetting"
+      ],
+      "docCardinality": "1 to many",
+      "enforcement": "Declared FK, CASCADE"
+    },
+    {
+      "id": "fk_api_tenantllmsetting_chat_model_id",
+      "source": "public.api_llmchatmodel",
+      "target": "public.api_tenantllmsetting",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "chat_model_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/spark-assist-ai.md#table-api_tenantllmsetting"
+      ],
+      "docCardinality": "1 to many",
+      "enforcement": "Declared FK, CASCADE"
+    },
+    {
+      "id": "fk_api_tenantllmsetting_embedding_model_id",
+      "source": "public.api_llmembeddingmodel",
+      "target": "public.api_tenantllmsetting",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "embedding_model_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/spark-assist-ai.md#table-api_tenantllmsetting"
+      ],
+      "docCardinality": "1 to many",
+      "enforcement": "Declared FK, CASCADE"
+    },
+    {
+      "id": "fk_api_documentembedding_embedding_model_id",
+      "source": "public.api_llmembeddingmodel",
+      "target": "public.api_documentembedding",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "embedding_model_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "PROTECT",
+      "evidence": [
+        "current-db-arch/spark-assist-ai.md#table-api_documentembedding"
+      ],
+      "docCardinality": "1 to many",
+      "enforcement": "Declared FK, PROTECT (Django)"
+    },
+    {
+      "id": "fk_api_resource_supersedes_id",
+      "source": "public.api_resource",
+      "target": "public.api_resource",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "supersedes_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "PROTECT",
+      "evidence": [
+        "current-db-arch/spark-assist-ai.md#table-api_resource"
+      ],
+      "docCardinality": "many to 0..1 (validation keeps it 1 to 0..1)",
+      "enforcement": "Declared FK, PROTECT"
+    },
+    {
+      "id": "fk_api_resource_roles_resource_id",
+      "source": "public.api_resource",
+      "target": "public.api_resource_roles",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "resource_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/spark-assist-ai.md#table-api_resource_roles"
+      ],
+      "docCardinality": "1 to many",
+      "enforcement": "Declared FK, CASCADE"
+    },
+    {
+      "id": "fk_api_resource_specific_users_resource_id",
+      "source": "public.api_resource",
+      "target": "public.api_resource_specific_users",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "resource_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/spark-assist-ai.md#table-api_resource_specific_users"
+      ],
+      "docCardinality": "1 to many",
+      "enforcement": "Declared FK, CASCADE"
+    },
+    {
+      "id": "fk_api_resource_assistants_resource_id",
+      "source": "public.api_resource",
+      "target": "public.api_resource_assistants",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "resource_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/spark-assist-ai.md#table-api_resource_assistants"
+      ],
+      "docCardinality": "1 to many",
+      "enforcement": "Declared FK, CASCADE"
+    },
+    {
+      "id": "fk_api_resourcepage_resource_id",
+      "source": "public.api_resource",
+      "target": "public.api_resourcepage",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "resource_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/spark-assist-ai.md#table-api_resourcepage"
+      ],
+      "docCardinality": "1 to many",
+      "enforcement": "Declared FK, CASCADE"
+    },
+    {
+      "id": "fk_api_suggestion_resource_id",
+      "source": "public.api_resource",
+      "target": "public.api_suggestion",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "resource_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/spark-assist-ai.md#table-api_suggestion"
+      ],
+      "docCardinality": "1 to many",
+      "enforcement": "Declared FK, CASCADE"
+    },
+    {
+      "id": "fk_api_documentembedding_resource_page_id",
+      "source": "public.api_resourcepage",
+      "target": "public.api_documentembedding",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "resource_page_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/spark-assist-ai.md#table-api_documentembedding"
+      ],
+      "docCardinality": "1 to many (one per embedding model)",
+      "enforcement": "Declared FK, CASCADE"
+    },
+    {
+      "id": "api_documentembedding_page_tenant_fk",
+      "source": "public.api_resourcepage",
+      "target": "public.api_documentembedding",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "(id, tenant_id)",
+      "targetColumn": "(resource_page_id, tenant_id)",
+      "enforced": true,
+      "constraintName": "api_documentembedding_page_tenant_fk",
+      "onDelete": null,
+      "evidence": [
+        "current-db-arch/spark-assist-ai.md#table-api_documentembedding"
+      ],
+      "docCardinality": "1 to many",
+      "enforcement": "Raw SQL FK api_documentembedding_page_tenant_fk, not deferrable"
+    },
+    {
+      "id": "fk_api_chathistoryresourcepage_resource_page_id",
+      "source": "public.api_resourcepage",
+      "target": "public.api_chathistoryresourcepage",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "resource_page_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/spark-assist-ai.md#table-api_chathistoryresourcepage"
+      ],
+      "docCardinality": "1 to many",
+      "enforcement": "Declared FK, CASCADE"
+    },
+    {
+      "id": "fk_api_slackchathistoryresourcepage_resource_page_id",
+      "source": "public.api_resourcepage",
+      "target": "public.api_slackchathistoryresourcepage",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "resource_page_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/spark-assist-ai.md#table-api_slackchathistoryresourcepage"
+      ],
+      "docCardinality": "1 to many",
+      "enforcement": "Declared FK, CASCADE"
+    },
+    {
+      "id": "fk_api_chathistory_chat_id",
+      "source": "public.api_chat",
+      "target": "public.api_chathistory",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "chat_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/spark-assist-ai.md#table-api_chathistory"
+      ],
+      "docCardinality": "1 to many",
+      "enforcement": "Declared FK, CASCADE"
+    },
+    {
+      "id": "fk_api_chatsummary_chat_id",
+      "source": "public.api_chat",
+      "target": "public.api_chatsummary",
+      "cardinality": "1:1",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "chat_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/spark-assist-ai.md#table-api_chatsummary"
+      ],
+      "docCardinality": "1 to 0..1",
+      "enforcement": "Declared FK (unique), CASCADE"
+    },
+    {
+      "id": "fk_api_chatapiresponse_chat_id",
+      "source": "public.api_chat",
+      "target": "public.api_chatapiresponse",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "chat_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/spark-assist-ai.md#table-api_chatapiresponse"
+      ],
+      "docCardinality": "1 to many",
+      "enforcement": "Declared FK, CASCADE"
+    },
+    {
+      "id": "fk_api_chathistoryresourcepage_chat_history_id",
+      "source": "public.api_chathistory",
+      "target": "public.api_chathistoryresourcepage",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "chat_history_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/spark-assist-ai.md#table-api_chathistoryresourcepage"
+      ],
+      "docCardinality": "1 to many",
+      "enforcement": "Declared FK, CASCADE"
+    },
+    {
+      "id": "fk_api_slackchathistoryresourcepage_slack_chat_history_id",
+      "source": "public.api_slackchathistory",
+      "target": "public.api_slackchathistoryresourcepage",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "slack_chat_history_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/spark-assist-ai.md#table-api_slackchathistoryresourcepage"
+      ],
+      "docCardinality": "1 to many",
+      "enforcement": "Declared FK, CASCADE"
+    },
+    {
+      "id": "fk_auth_permission_content_type_id",
+      "source": "public.django_content_type",
+      "target": "public.auth_permission",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "content_type_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/spark-assist-ai.md#table-auth_permission"
+      ],
+      "docCardinality": "1 to many",
+      "enforcement": "Declared FK, CASCADE"
+    },
+    {
+      "id": "fk_django_admin_log_content_type_id",
+      "source": "public.django_content_type",
+      "target": "public.django_admin_log",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "content_type_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "SET_NULL",
+      "evidence": [
+        "current-db-arch/spark-assist-ai.md#table-django_admin_log"
+      ],
+      "docCardinality": "1 to many",
+      "enforcement": "Declared FK, SET_NULL"
+    },
+    {
+      "id": "fk_auth_group_permissions_permission_id",
+      "source": "public.auth_permission",
+      "target": "public.auth_group_permissions",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "permission_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/spark-assist-ai.md#table-auth_group_permissions"
+      ],
+      "docCardinality": "1 to many",
+      "enforcement": "Declared FK, CASCADE"
+    },
+    {
+      "id": "fk_auth_user_user_permissions_permission_id",
+      "source": "public.auth_permission",
+      "target": "public.auth_user_user_permissions",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "permission_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/spark-assist-ai.md#table-auth_user_user_permissions"
+      ],
+      "docCardinality": "1 to many",
+      "enforcement": "Declared FK, CASCADE"
+    },
+    {
+      "id": "fk_auth_group_permissions_group_id",
+      "source": "public.auth_group",
+      "target": "public.auth_group_permissions",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "group_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/spark-assist-ai.md#table-auth_group_permissions"
+      ],
+      "docCardinality": "1 to many",
+      "enforcement": "Declared FK, CASCADE"
+    },
+    {
+      "id": "fk_auth_user_groups_group_id",
+      "source": "public.auth_group",
+      "target": "public.auth_user_groups",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "group_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/spark-assist-ai.md#table-auth_user_groups"
+      ],
+      "docCardinality": "1 to many",
+      "enforcement": "Declared FK, CASCADE"
+    },
+    {
+      "id": "fk_auth_user_groups_user_id",
+      "source": "public.auth_user",
+      "target": "public.auth_user_groups",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "user_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/spark-assist-ai.md#table-auth_user_groups"
+      ],
+      "docCardinality": "1 to many",
+      "enforcement": "Declared FK, CASCADE"
+    },
+    {
+      "id": "fk_auth_user_user_permissions_user_id",
+      "source": "public.auth_user",
+      "target": "public.auth_user_user_permissions",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "user_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/spark-assist-ai.md#table-auth_user_user_permissions"
+      ],
+      "docCardinality": "1 to many",
+      "enforcement": "Declared FK, CASCADE"
+    },
+    {
+      "id": "fk_django_admin_log_user_id",
+      "source": "public.auth_user",
+      "target": "public.django_admin_log",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "user_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/spark-assist-ai.md#table-django_admin_log"
+      ],
+      "docCardinality": "1 to many",
+      "enforcement": "Declared FK, CASCADE"
+    },
+    {
+      "id": "m2m_api_role_api_resource_via_api_resource_roles",
+      "source": "public.api_role",
+      "target": "public.api_resource",
+      "cardinality": "m:n",
+      "kind": "conceptual_many_to_many",
+      "junctionTable": "api_resource_roles",
+      "sourceColumn": "id",
+      "targetColumn": "id",
+      "enforced": false,
+      "constraintName": null,
+      "onDelete": null,
+      "evidence": [
+        "current-db-arch/spark-assist-ai.md#table-api_resource_roles"
+      ]
+    },
+    {
+      "id": "m2m_api_user_api_resource_via_api_resource_specific_users",
+      "source": "public.api_user",
+      "target": "public.api_resource",
+      "cardinality": "m:n",
+      "kind": "conceptual_many_to_many",
+      "junctionTable": "api_resource_specific_users",
+      "sourceColumn": "id",
+      "targetColumn": "id",
+      "enforced": false,
+      "constraintName": null,
+      "onDelete": null,
+      "evidence": [
+        "current-db-arch/spark-assist-ai.md#table-api_resource_specific_users"
+      ]
+    },
+    {
+      "id": "m2m_api_assistant_api_resource_via_api_resource_assistants",
+      "source": "public.api_assistant",
+      "target": "public.api_resource",
+      "cardinality": "m:n",
+      "kind": "conceptual_many_to_many",
+      "junctionTable": "api_resource_assistants",
+      "sourceColumn": "id",
+      "targetColumn": "id",
+      "enforced": false,
+      "constraintName": null,
+      "onDelete": null,
+      "evidence": [
+        "current-db-arch/spark-assist-ai.md#table-api_resource_assistants"
+      ]
+    },
+    {
+      "id": "m2m_api_resourcepage_api_chathistory_via_api_chathistoryresourcepage",
+      "source": "public.api_resourcepage",
+      "target": "public.api_chathistory",
+      "cardinality": "m:n",
+      "kind": "conceptual_many_to_many",
+      "junctionTable": "api_chathistoryresourcepage",
+      "sourceColumn": "id",
+      "targetColumn": "id",
+      "enforced": false,
+      "constraintName": null,
+      "onDelete": null,
+      "evidence": [
+        "current-db-arch/spark-assist-ai.md#table-api_chathistoryresourcepage"
+      ]
+    },
+    {
+      "id": "m2m_api_resourcepage_api_slackchathistory_via_api_slackchathistoryresourcepage",
+      "source": "public.api_resourcepage",
+      "target": "public.api_slackchathistory",
+      "cardinality": "m:n",
+      "kind": "conceptual_many_to_many",
+      "junctionTable": "api_slackchathistoryresourcepage",
+      "sourceColumn": "id",
+      "targetColumn": "id",
+      "enforced": false,
+      "constraintName": null,
+      "onDelete": null,
+      "evidence": [
+        "current-db-arch/spark-assist-ai.md#table-api_slackchathistoryresourcepage"
+      ]
+    },
+    {
+      "id": "m2m_auth_permission_auth_group_via_auth_group_permissions",
+      "source": "public.auth_permission",
+      "target": "public.auth_group",
+      "cardinality": "m:n",
+      "kind": "conceptual_many_to_many",
+      "junctionTable": "auth_group_permissions",
+      "sourceColumn": "id",
+      "targetColumn": "id",
+      "enforced": false,
+      "constraintName": null,
+      "onDelete": null,
+      "evidence": [
+        "current-db-arch/spark-assist-ai.md#table-auth_group_permissions"
+      ]
+    },
+    {
+      "id": "m2m_auth_group_auth_user_via_auth_user_groups",
+      "source": "public.auth_group",
+      "target": "public.auth_user",
+      "cardinality": "m:n",
+      "kind": "conceptual_many_to_many",
+      "junctionTable": "auth_user_groups",
+      "sourceColumn": "id",
+      "targetColumn": "id",
+      "enforced": false,
+      "constraintName": null,
+      "onDelete": null,
+      "evidence": [
+        "current-db-arch/spark-assist-ai.md#table-auth_user_groups"
+      ]
+    },
+    {
+      "id": "m2m_auth_permission_auth_user_via_auth_user_user_permissions",
+      "source": "public.auth_permission",
+      "target": "public.auth_user",
+      "cardinality": "m:n",
+      "kind": "conceptual_many_to_many",
+      "junctionTable": "auth_user_user_permissions",
+      "sourceColumn": "id",
+      "targetColumn": "id",
+      "enforced": false,
+      "constraintName": null,
+      "onDelete": null,
+      "evidence": [
+        "current-db-arch/spark-assist-ai.md#table-auth_user_user_permissions"
+      ]
+    }
+  ],
+  "unresolved": [
+    "no primary key documented: api_backup_orphan_chathistoryresourcepage",
+    "no primary key documented: api_backup_orphan_slackchathistoryresourcepage",
+    "no primary key documented: api_backup_orphan_documentembedding",
+    "no primary key documented: api_backup_orphan_resourcepage",
+    "no primary key documented: api_backup_orphan_suggestion",
+    "no primary key documented: api_backup_orphan_resource_roles",
+    "no primary key documented: api_backup_orphan_resource_specific_users",
+    "no primary key documented: api_backup_orphan_resource_assistants",
+    "no primary key documented: api_backup_orphan_resource",
+    "no primary key documented: api_backup_orphan_assistant"
+  ]
+}

@@ -1,0 +1,224 @@
+{
+  "service": "notification",
+  "generatedAt": "2026-10-15T09:29:59.605Z",
+  "stats": {
+    "totalTables": 6,
+    "physicalRelationships": 0,
+    "conceptualRelationships": 0,
+    "inferredRelationships": 2,
+    "totalRelationships": 2,
+    "modules": 10,
+    "isolatedTables": 3,
+    "cardinalityBreakdown": {
+      "1:n": 2
+    },
+    "statusBreakdown": {
+      "active": 6
+    }
+  },
+  "hub": "public.Notification",
+  "modules": [
+    "Delivery pipeline",
+    "Inbox",
+    "Web push",
+    "Rules config",
+    "Structures",
+    "Org config admin",
+    "Email outbox",
+    "Public service API",
+    "Ops scripts and seeds",
+    "Event registry"
+  ],
+  "nodes": [
+    {
+      "id": "public.Notification",
+      "name": "Notification",
+      "description": "one in-app bell row per recipient per event, with grouping key, lifecycle status for approval-type events, and structured meta-line parts.",
+      "modules": [
+        "Delivery pipeline",
+        "Inbox",
+        "Org config admin",
+        "Ops scripts and seeds"
+      ],
+      "ownerModule": "Delivery pipeline",
+      "status": "active",
+      "isolated": false,
+      "externalRefs": [
+        {
+          "target": "auth-service tenants and users; producer records",
+          "columns": "tenantId, userEmail, actorEmail, entityId",
+          "cardinality": "",
+          "enforcement": "None"
+        }
+      ],
+      "evidence": [
+        "current-db-arch/notification.md#table-notification"
+      ]
+    },
+    {
+      "id": "public.PushSubscription",
+      "name": "PushSubscription",
+      "description": "one browser push endpoint per device, owned by a user in a tenant.",
+      "modules": [
+        "Delivery pipeline",
+        "Web push",
+        "Ops scripts and seeds"
+      ],
+      "ownerModule": "Web push",
+      "status": "active",
+      "isolated": true,
+      "externalRefs": [
+        {
+          "target": "auth-service tenants and users",
+          "columns": "tenantId, userEmail",
+          "cardinality": "",
+          "enforcement": "None"
+        }
+      ],
+      "evidence": [
+        "current-db-arch/notification.md#table-pushsubscription"
+      ]
+    },
+    {
+      "id": "public.NotificationRule",
+      "name": "NotificationRule",
+      "description": "per-tenant, per-event switch with recipient audience and delivery channels.",
+      "modules": [
+        "Delivery pipeline",
+        "Rules config",
+        "Org config admin",
+        "Public service API",
+        "Ops scripts and seeds"
+      ],
+      "ownerModule": "Rules config",
+      "status": "active",
+      "isolated": true,
+      "externalRefs": [
+        {
+          "target": "auth-service tenants",
+          "columns": "tenantId",
+          "cardinality": "",
+          "enforcement": "None"
+        }
+      ],
+      "evidence": [
+        "current-db-arch/notification.md#table-notificationrule"
+      ]
+    },
+    {
+      "id": "public.NotificationStructure",
+      "name": "NotificationStructure",
+      "description": "one definition of how an event is composed and routed, for one scope (org or project) and one version. History is kept, not overwritten.",
+      "modules": [
+        "Delivery pipeline",
+        "Structures",
+        "Org config admin",
+        "Public service API",
+        "Ops scripts and seeds"
+      ],
+      "ownerModule": "Structures",
+      "status": "active",
+      "isolated": false,
+      "externalRefs": [
+        {
+          "target": "job-service projects, auth-service tenants",
+          "columns": "projectId, tenantId",
+          "cardinality": "",
+          "enforcement": "None"
+        }
+      ],
+      "evidence": [
+        "current-db-arch/notification.md#table-notificationstructure"
+      ]
+    },
+    {
+      "id": "public.OrgConfig",
+      "name": "OrgConfig",
+      "description": "one row per tenant with the bell switch, email switch, disabled categories and retention.",
+      "modules": [
+        "Delivery pipeline",
+        "Inbox",
+        "Org config admin",
+        "Ops scripts and seeds"
+      ],
+      "ownerModule": "Org config admin",
+      "status": "active",
+      "isolated": true,
+      "externalRefs": [
+        {
+          "target": "auth-service tenants",
+          "columns": "tenantId",
+          "cardinality": "1 to 1",
+          "enforcement": "None"
+        }
+      ],
+      "evidence": [
+        "current-db-arch/notification.md#table-orgconfig"
+      ]
+    },
+    {
+      "id": "public.EmailDelivery",
+      "name": "EmailDelivery",
+      "description": "one email owed to one recipient, with status machine, retry state and the reason a message was not sent.",
+      "modules": [
+        "Delivery pipeline",
+        "Email outbox",
+        "Public service API"
+      ],
+      "ownerModule": "Email outbox",
+      "status": "active",
+      "isolated": false,
+      "externalRefs": [
+        {
+          "target": "auth-service tenants",
+          "columns": "tenantId",
+          "cardinality": "",
+          "enforcement": "None"
+        }
+      ],
+      "evidence": [
+        "current-db-arch/notification.md#table-emaildelivery"
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "id": "logical_Notification_structureId",
+      "source": "public.NotificationStructure",
+      "target": "public.Notification",
+      "cardinality": "1:n",
+      "kind": "logical_relationship",
+      "sourceColumn": "id",
+      "targetColumn": "structureId",
+      "enforced": false,
+      "constraintName": null,
+      "onDelete": null,
+      "evidence": [
+        "current-db-arch/notification.md#table-notification"
+      ],
+      "docCardinality": "many to 0..1",
+      "enforcement": "Inferred: written from structure?.id (dispatch.service.js:262, delivery.service.js:228); never read by logic"
+    },
+    {
+      "id": "logical_EmailDelivery_notificationId",
+      "source": "public.Notification",
+      "target": "public.EmailDelivery",
+      "cardinality": "1:n",
+      "kind": "logical_relationship",
+      "sourceColumn": "id",
+      "targetColumn": "notificationId",
+      "enforced": false,
+      "constraintName": null,
+      "onDelete": null,
+      "evidence": [
+        "current-db-arch/notification.md#table-emaildelivery"
+      ],
+      "docCardinality": "1 to 0..many",
+      "enforcement": "Inferred: written from record?.id (dispatch.service.js:289,302); never read"
+    }
+  ],
+  "unresolved": [
+    "Logical, not drawn as an edge: NotificationRule <-> app event catalogue (app/events/index.js:34): eventType []; Application validation only",
+    "Logical, not drawn as an edge: OrgConfig <-> every table: tenantId (shared tenant key) [1 to many]; None; tenant ids originate in auth-service, so this is not counted as a relationship"
+  ]
+}

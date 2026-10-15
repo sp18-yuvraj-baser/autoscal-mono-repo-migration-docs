@@ -1,0 +1,676 @@
+{
+  "service": "finance-service-node",
+  "generatedAt": "2026-10-15T09:29:51.584Z",
+  "stats": {
+    "totalTables": 13,
+    "physicalRelationships": 6,
+    "conceptualRelationships": 1,
+    "inferredRelationships": 13,
+    "totalRelationships": 20,
+    "modules": 12,
+    "isolatedTables": 0,
+    "cardinalityBreakdown": {
+      "1:n": 18,
+      "1:1": 1,
+      "m:n": 1
+    },
+    "statusBreakdown": {
+      "active": 9,
+      "legacy": 4
+    }
+  },
+  "hub": "public.account_employee",
+  "modules": [
+    "Reimbursements",
+    "Approvals workflow",
+    "Reimbursement types",
+    "Approval settings",
+    "Tenant reports and approver queue",
+    "Files",
+    "File registration (internal)",
+    "Employee sync (internal)",
+    "Auth middleware",
+    "Auto-process scheduler",
+    "Django import (internal)",
+    "One-time cutover (ops)"
+  ],
+  "nodes": [
+    {
+      "id": "public.reimbursement_reimbursement",
+      "name": "reimbursement_reimbursement",
+      "description": "one row per reimbursement request (header): claimant, claimed and approved amounts, lifecycle status, the approval chain snapshot taken at submission, and who processed, rejected or cancelled it.",
+      "modules": [
+        "Reimbursements",
+        "Approvals workflow",
+        "Tenant reports and approver queue",
+        "Auto-process scheduler",
+        "Django import (internal)",
+        "One-time cutover (ops)"
+      ],
+      "ownerModule": "Reimbursements",
+      "status": "active",
+      "isolated": false,
+      "externalRefs": [
+        {
+          "target": "auth-service tenants and custom permissions",
+          "columns": "tenant_id, permission-key columns",
+          "cardinality": "",
+          "enforcement": "None"
+        }
+      ],
+      "evidence": [
+        "current-db-arch/finance-service-node.md#table-reimbursement_reimbursement"
+      ]
+    },
+    {
+      "id": "public.reimbursement_line_item",
+      "name": "reimbursement_line_item",
+      "description": "one expense line of a request, with its type, amount, date and type-specific details.",
+      "modules": [
+        "Reimbursements",
+        "Approvals workflow",
+        "Tenant reports and approver queue",
+        "Django import (internal)",
+        "One-time cutover (ops)"
+      ],
+      "ownerModule": "Reimbursements",
+      "status": "active",
+      "isolated": false,
+      "externalRefs": [],
+      "evidence": [
+        "current-db-arch/finance-service-node.md#table-reimbursement_line_item"
+      ]
+    },
+    {
+      "id": "public.reimbursement_line_item_proof",
+      "name": "reimbursement_line_item_proof",
+      "description": "junction between line items and proof files (multi-proof per line).",
+      "modules": [
+        "Reimbursements",
+        "Approvals workflow",
+        "Tenant reports and approver queue",
+        "Files",
+        "Django import (internal)"
+      ],
+      "ownerModule": "Reimbursements",
+      "status": "active",
+      "isolated": false,
+      "externalRefs": [],
+      "evidence": [
+        "current-db-arch/finance-service-node.md#table-reimbursement_line_item_proof"
+      ]
+    },
+    {
+      "id": "public.reimbursement_activity",
+      "name": "reimbursement_activity",
+      "description": "append-only audit log of request events with before and after snapshots.",
+      "modules": [
+        "Reimbursements",
+        "Approvals workflow",
+        "Auto-process scheduler",
+        "Django import (internal)",
+        "One-time cutover (ops)"
+      ],
+      "ownerModule": "Reimbursements",
+      "status": "active",
+      "isolated": false,
+      "externalRefs": [],
+      "evidence": [
+        "current-db-arch/finance-service-node.md#table-reimbursement_activity"
+      ]
+    },
+    {
+      "id": "public.reimbursement_reimbursementtype",
+      "name": "reimbursement_reimbursementtype",
+      "description": "a tenant's expense category with a per-request cap, proof requirement and a JSON definition of extra fields line items must carry.",
+      "modules": [
+        "Reimbursements",
+        "Approvals workflow",
+        "Reimbursement types",
+        "Tenant reports and approver queue",
+        "Django import (internal)",
+        "One-time cutover (ops)"
+      ],
+      "ownerModule": "Reimbursement types",
+      "status": "active",
+      "isolated": false,
+      "externalRefs": [
+        {
+          "target": "auth-service tenants",
+          "columns": "tenant_id",
+          "cardinality": "",
+          "enforcement": "None"
+        }
+      ],
+      "evidence": [
+        "current-db-arch/finance-service-node.md#table-reimbursement_reimbursementtype"
+      ]
+    },
+    {
+      "id": "public.reimbursement_approval_step",
+      "name": "reimbursement_approval_step",
+      "description": "one ordered approval step per row for a tenant, each tied to an auth-service custom permission key.",
+      "modules": [
+        "Reimbursements",
+        "Approvals workflow",
+        "Approval settings",
+        "Tenant reports and approver queue",
+        "Auto-process scheduler",
+        "Django import (internal)"
+      ],
+      "ownerModule": "Approval settings",
+      "status": "active",
+      "isolated": false,
+      "externalRefs": [
+        {
+          "target": "auth-service custom permissions",
+          "columns": "permission_key, tenant_id",
+          "cardinality": "",
+          "enforcement": "None; synced by HTTP before the local write (approvalSettings.controller.js:61)"
+        }
+      ],
+      "evidence": [
+        "current-db-arch/finance-service-node.md#table-reimbursement_approval_step"
+      ]
+    },
+    {
+      "id": "public.reimbursement_approval_settings",
+      "name": "reimbursement_approval_settings",
+      "description": "one row per tenant with the processing permission key and the monthly auto-process configuration and claim marker.",
+      "modules": [
+        "Reimbursements",
+        "Approvals workflow",
+        "Approval settings",
+        "Tenant reports and approver queue",
+        "Auto-process scheduler",
+        "Django import (internal)"
+      ],
+      "ownerModule": "Approval settings",
+      "status": "active",
+      "isolated": false,
+      "externalRefs": [
+        {
+          "target": "auth-service tenants and custom permissions",
+          "columns": "tenant_id, processing_permission_key",
+          "cardinality": "",
+          "enforcement": "None"
+        }
+      ],
+      "evidence": [
+        "current-db-arch/finance-service-node.md#table-reimbursement_approval_settings"
+      ]
+    },
+    {
+      "id": "public.reimbursement_file",
+      "name": "reimbursement_file",
+      "description": "metadata for a proof file stored in S3 (name, size, MIME type, S3 key, uploader, upload status).",
+      "modules": [
+        "Reimbursements",
+        "Approvals workflow",
+        "Tenant reports and approver queue",
+        "Files",
+        "File registration (internal)",
+        "Django import (internal)",
+        "One-time cutover (ops)"
+      ],
+      "ownerModule": "Files",
+      "status": "active",
+      "isolated": false,
+      "externalRefs": [
+        {
+          "target": "S3 object; auth-service tenant",
+          "columns": "file_key, tenant_id",
+          "cardinality": "1 to 1",
+          "enforcement": "None"
+        }
+      ],
+      "evidence": [
+        "current-db-arch/finance-service-node.md#table-reimbursement_file"
+      ]
+    },
+    {
+      "id": "public.account_employee",
+      "name": "account_employee",
+      "description": "local mirror of auth-service team members for this service: identity, contact, role label, status and tenant-admin flag.",
+      "modules": [
+        "Reimbursements",
+        "Approvals workflow",
+        "Tenant reports and approver queue",
+        "File registration (internal)",
+        "Employee sync (internal)",
+        "Auth middleware",
+        "Django import (internal)"
+      ],
+      "ownerModule": "Employee sync (internal)",
+      "status": "active",
+      "isolated": false,
+      "externalRefs": [
+        {
+          "target": "auth-service users and tenants",
+          "columns": "employee_id, team_member_id, tenant_id, reporting_manager_id",
+          "cardinality": "1 to 1 (inferred)",
+          "enforcement": "None"
+        }
+      ],
+      "evidence": [
+        "current-db-arch/finance-service-node.md#table-account_employee"
+      ]
+    },
+    {
+      "id": "public.reimbursement_approvalconfig",
+      "name": "reimbursement_approvalconfig",
+      "description": "per-type approval configuration of the old configurable approver model.",
+      "modules": [
+        "One-time cutover (ops)"
+      ],
+      "ownerModule": "One-time cutover (ops)",
+      "status": "legacy",
+      "isolated": false,
+      "externalRefs": [],
+      "evidence": [
+        "current-db-arch/finance-service-node.md#table-reimbursement_approvalconfig"
+      ]
+    },
+    {
+      "id": "public.reimbursement_approvallevel",
+      "name": "reimbursement_approvallevel",
+      "description": "ordered approval levels with amount thresholds under an approval config.",
+      "modules": [
+        "One-time cutover (ops)"
+      ],
+      "ownerModule": "One-time cutover (ops)",
+      "status": "legacy",
+      "isolated": false,
+      "externalRefs": [],
+      "evidence": [
+        "current-db-arch/finance-service-node.md#table-reimbursement_approvallevel"
+      ]
+    },
+    {
+      "id": "public.reimbursement_approvalassignee",
+      "name": "reimbursement_approvalassignee",
+      "description": "who approves at a level: a role, a specific employee, or the reporting manager.",
+      "modules": [
+        "One-time cutover (ops)"
+      ],
+      "ownerModule": "One-time cutover (ops)",
+      "status": "legacy",
+      "isolated": false,
+      "externalRefs": [
+        {
+          "target": "Django account.Role table (not in this inventory)",
+          "columns": "role_id",
+          "cardinality": "many to 0..1",
+          "enforcement": "Django FK"
+        }
+      ],
+      "evidence": [
+        "current-db-arch/finance-service-node.md#table-reimbursement_approvalassignee"
+      ]
+    },
+    {
+      "id": "public.reimbursement_reimbursement_proofs",
+      "name": "reimbursement_reimbursement_proofs",
+      "description": "legacy request-level proof attachments (one request, many files), replaced by reimbursement_line_item_proof.",
+      "modules": [
+        "One-time cutover (ops)"
+      ],
+      "ownerModule": "One-time cutover (ops)",
+      "status": "legacy",
+      "isolated": false,
+      "externalRefs": [],
+      "evidence": [
+        "current-db-arch/finance-service-node.md#table-reimbursement_reimbursement_proofs"
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "id": "reimbursement_reimbursement_employee_id_fkey",
+      "source": "public.account_employee",
+      "target": "public.reimbursement_reimbursement",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "employee_id",
+      "targetColumn": "employee_id",
+      "enforced": true,
+      "constraintName": "reimbursement_reimbursement_employee_id_fkey",
+      "onDelete": "RESTRICT",
+      "evidence": [
+        "current-db-arch/finance-service-node.md#table-reimbursement_reimbursement"
+      ],
+      "docCardinality": "many to 1 (required)",
+      "enforcement": "Declared FK, RESTRICT"
+    },
+    {
+      "id": "logical_reimbursement_reimbursement_processed_by",
+      "source": "public.account_employee",
+      "target": "public.reimbursement_reimbursement",
+      "cardinality": "1:n",
+      "kind": "logical_relationship",
+      "sourceColumn": "employee_id",
+      "targetColumn": "processed_by",
+      "enforced": false,
+      "constraintName": null,
+      "onDelete": null,
+      "evidence": [
+        "current-db-arch/finance-service-node.md#table-reimbursement_reimbursement"
+      ],
+      "docCardinality": "many to 0..1 each",
+      "enforcement": "Inferred: values come from req.current_team_member.id, which is employee_id (app/middleware/authentication.js:78)"
+    },
+    {
+      "id": "logical_reimbursement_reimbursement_rejected_by",
+      "source": "public.account_employee",
+      "target": "public.reimbursement_reimbursement",
+      "cardinality": "1:n",
+      "kind": "logical_relationship",
+      "sourceColumn": "employee_id",
+      "targetColumn": "rejected_by",
+      "enforced": false,
+      "constraintName": null,
+      "onDelete": null,
+      "evidence": [
+        "current-db-arch/finance-service-node.md#table-reimbursement_reimbursement"
+      ],
+      "docCardinality": "many to 0..1 each",
+      "enforcement": "Inferred: values come from req.current_team_member.id, which is employee_id (app/middleware/authentication.js:78)"
+    },
+    {
+      "id": "logical_reimbursement_reimbursement_cancelled_by",
+      "source": "public.account_employee",
+      "target": "public.reimbursement_reimbursement",
+      "cardinality": "1:n",
+      "kind": "logical_relationship",
+      "sourceColumn": "employee_id",
+      "targetColumn": "cancelled_by",
+      "enforced": false,
+      "constraintName": null,
+      "onDelete": null,
+      "evidence": [
+        "current-db-arch/finance-service-node.md#table-reimbursement_reimbursement"
+      ],
+      "docCardinality": "many to 0..1 each",
+      "enforcement": "Inferred: values come from req.current_team_member.id, which is employee_id (app/middleware/authentication.js:78)"
+    },
+    {
+      "id": "reimbursement_line_item_reimbursement_id_fkey",
+      "source": "public.reimbursement_reimbursement",
+      "target": "public.reimbursement_line_item",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "reimbursement_id",
+      "targetColumn": "reimbursement_id",
+      "enforced": true,
+      "constraintName": "reimbursement_line_item_reimbursement_id_fkey",
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/finance-service-node.md#table-reimbursement_line_item"
+      ],
+      "docCardinality": "1 to many",
+      "enforcement": "Declared FK, CASCADE"
+    },
+    {
+      "id": "reimbursement_activity_reimbursement_id_fkey",
+      "source": "public.reimbursement_reimbursement",
+      "target": "public.reimbursement_activity",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "reimbursement_id",
+      "targetColumn": "reimbursement_id",
+      "enforced": true,
+      "constraintName": "reimbursement_activity_reimbursement_id_fkey",
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/finance-service-node.md#table-reimbursement_activity"
+      ],
+      "docCardinality": "1 to many",
+      "enforcement": "Declared FK, CASCADE"
+    },
+    {
+      "id": "logical_reimbursement_reimbursement_proofs_reimbursement_id",
+      "source": "public.reimbursement_reimbursement",
+      "target": "public.reimbursement_reimbursement_proofs",
+      "cardinality": "1:n",
+      "kind": "logical_relationship",
+      "sourceColumn": "id",
+      "targetColumn": "reimbursement_id",
+      "enforced": false,
+      "constraintName": null,
+      "onDelete": null,
+      "evidence": [
+        "current-db-arch/finance-service-node.md#table-reimbursement_reimbursement_proofs"
+      ],
+      "docCardinality": "1 to many",
+      "enforcement": "Django M2M, only where not dropped"
+    },
+    {
+      "id": "reimbursement_line_item_reimbursement_type_id_fkey",
+      "source": "public.reimbursement_reimbursementtype",
+      "target": "public.reimbursement_line_item",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "reimbursement_type_id",
+      "enforced": true,
+      "constraintName": "reimbursement_line_item_reimbursement_type_id_fkey",
+      "onDelete": "RESTRICT",
+      "evidence": [
+        "current-db-arch/finance-service-node.md#table-reimbursement_line_item"
+      ],
+      "docCardinality": "many to 1",
+      "enforcement": "Declared FK, RESTRICT"
+    },
+    {
+      "id": "reimbursement_line_item_proof_line_item_id_fkey",
+      "source": "public.reimbursement_line_item",
+      "target": "public.reimbursement_line_item_proof",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "line_item_id",
+      "enforced": true,
+      "constraintName": "reimbursement_line_item_proof_line_item_id_fkey",
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/finance-service-node.md#table-reimbursement_line_item_proof"
+      ],
+      "docCardinality": "1 to many",
+      "enforcement": "Declared FK, CASCADE"
+    },
+    {
+      "id": "reimbursement_line_item_proof_file_id_fkey",
+      "source": "public.reimbursement_file",
+      "target": "public.reimbursement_line_item_proof",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "file_id",
+      "enforced": true,
+      "constraintName": "reimbursement_line_item_proof_file_id_fkey",
+      "onDelete": "RESTRICT",
+      "evidence": [
+        "current-db-arch/finance-service-node.md#table-reimbursement_line_item_proof"
+      ],
+      "docCardinality": "many to 1",
+      "enforcement": "Declared FK, RESTRICT"
+    },
+    {
+      "id": "logical_reimbursement_activity_actor_id",
+      "source": "public.account_employee",
+      "target": "public.reimbursement_activity",
+      "cardinality": "1:n",
+      "kind": "logical_relationship",
+      "sourceColumn": "employee_id",
+      "targetColumn": "actor_id",
+      "enforced": false,
+      "constraintName": null,
+      "onDelete": null,
+      "evidence": [
+        "current-db-arch/finance-service-node.md#table-reimbursement_activity"
+      ],
+      "docCardinality": "many to 0..1",
+      "enforcement": "Inferred (actor is req.current_team_member, approvalWorkflow.helper.js:61)"
+    },
+    {
+      "id": "logical_reimbursement_approvalconfig_reimbursement_type_id",
+      "source": "public.reimbursement_reimbursementtype",
+      "target": "public.reimbursement_approvalconfig",
+      "cardinality": "1:1",
+      "kind": "logical_relationship",
+      "sourceColumn": "id",
+      "targetColumn": "reimbursement_type_id",
+      "enforced": false,
+      "constraintName": null,
+      "onDelete": null,
+      "evidence": [
+        "current-db-arch/finance-service-node.md#table-reimbursement_approvalconfig"
+      ],
+      "docCardinality": "1 to 0..1",
+      "enforcement": "Django OneToOne, only where not dropped"
+    },
+    {
+      "id": "logical_reimbursement_file_uploaded_by",
+      "source": "public.account_employee",
+      "target": "public.reimbursement_file",
+      "cardinality": "1:n",
+      "kind": "logical_relationship",
+      "sourceColumn": "employee_id",
+      "targetColumn": "uploaded_by",
+      "enforced": false,
+      "constraintName": null,
+      "onDelete": null,
+      "evidence": [
+        "current-db-arch/finance-service-node.md#table-reimbursement_file"
+      ],
+      "docCardinality": "many to 0..1",
+      "enforcement": "Inferred (file.controller.js:10,25, fileRegistration.controller.js:71)"
+    },
+    {
+      "id": "logical_reimbursement_reimbursement_proofs_file_id",
+      "source": "public.reimbursement_file",
+      "target": "public.reimbursement_reimbursement_proofs",
+      "cardinality": "1:n",
+      "kind": "logical_relationship",
+      "sourceColumn": "id",
+      "targetColumn": "file_id",
+      "enforced": false,
+      "constraintName": null,
+      "onDelete": null,
+      "evidence": [
+        "current-db-arch/finance-service-node.md#table-reimbursement_reimbursement_proofs"
+      ],
+      "docCardinality": "1 to many",
+      "enforcement": "Django M2M, only where not dropped"
+    },
+    {
+      "id": "logical_reimbursement_approvalassignee_employee_id",
+      "source": "public.account_employee",
+      "target": "public.reimbursement_approvalassignee",
+      "cardinality": "1:n",
+      "kind": "logical_relationship",
+      "sourceColumn": null,
+      "targetColumn": "employee_id",
+      "enforced": false,
+      "constraintName": null,
+      "onDelete": null,
+      "evidence": [
+        "current-db-arch/finance-service-node.md#table-reimbursement_approvalassignee"
+      ],
+      "docCardinality": "1 to many",
+      "enforcement": "Django FK, only where not dropped"
+    },
+    {
+      "id": "logical_reimbursement_approvalassignee_reporting_manager_id",
+      "source": "public.account_employee",
+      "target": "public.reimbursement_approvalassignee",
+      "cardinality": "1:n",
+      "kind": "logical_relationship",
+      "sourceColumn": null,
+      "targetColumn": "reporting_manager_id",
+      "enforced": false,
+      "constraintName": null,
+      "onDelete": null,
+      "evidence": [
+        "current-db-arch/finance-service-node.md#table-reimbursement_approvalassignee"
+      ],
+      "docCardinality": "1 to many",
+      "enforcement": "Django FK, only where not dropped"
+    },
+    {
+      "id": "logical_reimbursement_approvallevel_approval_config_id",
+      "source": "public.reimbursement_approvalconfig",
+      "target": "public.reimbursement_approvallevel",
+      "cardinality": "1:n",
+      "kind": "logical_relationship",
+      "sourceColumn": null,
+      "targetColumn": "approval_config_id",
+      "enforced": false,
+      "constraintName": null,
+      "onDelete": null,
+      "evidence": [
+        "current-db-arch/finance-service-node.md#table-reimbursement_approvallevel"
+      ],
+      "docCardinality": "1 to many",
+      "enforcement": "Django FK"
+    },
+    {
+      "id": "logical_reimbursement_approvalassignee_approval_level_id",
+      "source": "public.reimbursement_approvallevel",
+      "target": "public.reimbursement_approvalassignee",
+      "cardinality": "1:n",
+      "kind": "logical_relationship",
+      "sourceColumn": null,
+      "targetColumn": "approval_level_id",
+      "enforced": false,
+      "constraintName": null,
+      "onDelete": null,
+      "evidence": [
+        "current-db-arch/finance-service-node.md#table-reimbursement_approvalassignee"
+      ],
+      "docCardinality": "1 to many",
+      "enforcement": "Django FK"
+    },
+    {
+      "id": "logical_reimbursement_approval_step_tenant_id",
+      "source": "public.reimbursement_approval_settings",
+      "target": "public.reimbursement_approval_step",
+      "cardinality": "1:n",
+      "kind": "logical_relationship",
+      "sourceColumn": "tenant_id",
+      "targetColumn": "tenant_id",
+      "enforced": false,
+      "constraintName": null,
+      "onDelete": null,
+      "evidence": [
+        "current-db-arch/finance-service-node.md#table-reimbursement_approval_step"
+      ],
+      "docCardinality": "(manual)",
+      "enforcement": "Inferred: read together by tenant in loadChainConfig; no Prisma relation (doc 2.1 counts it as inferred relationship)"
+    },
+    {
+      "id": "m2m_reimbursement_line_item_reimbursement_file_via_reimbursement_line_item_proof",
+      "source": "public.reimbursement_line_item",
+      "target": "public.reimbursement_file",
+      "cardinality": "m:n",
+      "kind": "conceptual_many_to_many",
+      "junctionTable": "reimbursement_line_item_proof",
+      "sourceColumn": "id",
+      "targetColumn": "id",
+      "enforced": false,
+      "constraintName": null,
+      "onDelete": null,
+      "evidence": [
+        "current-db-arch/finance-service-node.md#table-reimbursement_line_item_proof"
+      ]
+    }
+  ],
+  "unresolved": [
+    "Logical, not drawn as an edge: reimbursement_reimbursement <-> reimbursement_approval_step: approval_chain[].permission_key, chain_permission_keys, current_step_permission_key, passed_permission_keys copy permission_key values [snapshot, not a reference]; None; copied at submission (approvalChain.helper.js:34-57)",
+    "Dropped relationship not drawn: reimbursement_reimbursementtype Legacy in reimbursement_reimbursement: dropped column reimbursement_type_id to id; Django FK, dropped by 2_drop_legacy.sql:15",
+    "Logical, not drawn as an edge: reimbursement_approval_step <-> reimbursement_approval_settings: same tenant_id [1 settings row to many steps]; Inferred: read together by tenant in loadChainConfig (approvalChain.helper.js:4-13); no Prisma relation",
+    "Logical, not drawn as an edge: reimbursement_approval_step <-> reimbursement_reimbursement: permission_key copied into chain columns [snapshot]; None",
+    "Logical, not drawn as an edge: reimbursement_approval_settings <-> reimbursement_approval_step: same tenant_id [1 to many]; Inferred, no Prisma relation",
+    "Historical relationship not drawn: reimbursement_file reimbursement_line_item.proof_id to file_id Dropped FK reimbursement_line_item_proof_id_fkey (20260727181516:31)"
+  ]
+}

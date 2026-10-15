@@ -1,0 +1,766 @@
+{
+  "service": "auth-service-node",
+  "generatedAt": "2026-10-15T09:24:11.426Z",
+  "stats": {
+    "totalTables": 17,
+    "physicalRelationships": 19,
+    "conceptualRelationships": 1,
+    "inferredRelationships": 1,
+    "totalRelationships": 21,
+    "modules": 17,
+    "isolatedTables": 2,
+    "cardinalityBreakdown": {
+      "1:n": 19,
+      "1:1": 1,
+      "m:n": 1
+    },
+    "statusBreakdown": {
+      "active": 14,
+      "uncertain": 3
+    }
+  },
+  "hub": "public.tenants",
+  "modules": [
+    "Tenants and onboarding",
+    "Tenant config and reference reads",
+    "Users, auth and tokens",
+    "Roles and access policies",
+    "Policy documents and categories",
+    "Clients",
+    "Feedback",
+    "Email events (service-to-service)",
+    "Upload",
+    "Super admin (platform)",
+    "Service-to-service public API",
+    "Scheduler and sync crons",
+    "Auth middleware",
+    "Outbound service write-back",
+    "Mailers",
+    "Maintenance scripts",
+    "Seeds"
+  ],
+  "nodes": [
+    {
+      "id": "public.tenants",
+      "name": "tenants",
+      "description": "one row per customer organisation. Holds identity (name, subdomain, admin email), lifecycle status, subscription tier, sector, calendar-service credentials and the ids of tenant-level resources created in other services.",
+      "modules": [
+        "Tenants and onboarding",
+        "Tenant config and reference reads",
+        "Users, auth and tokens",
+        "Roles and access policies",
+        "Policy documents and categories",
+        "Feedback",
+        "Email events (service-to-service)",
+        "Super admin (platform)",
+        "Service-to-service public API",
+        "Scheduler and sync crons",
+        "Auth middleware",
+        "Outbound service write-back",
+        "Mailers",
+        "Maintenance scripts"
+      ],
+      "ownerModule": "Tenants and onboarding",
+      "status": "active",
+      "isolated": false,
+      "externalRefs": [
+        {
+          "target": "job-service organisations, forms, exit settings, team members; calendar-scheduler organisation",
+          "columns": "organisation_id, onboarding_form_id, exit_form_id, exit_settings_id, admin_id, calendar_organisation_id",
+          "cardinality": "1 to 1 (inferred)",
+          "enforcement": "None (other databases)"
+        }
+      ],
+      "evidence": [
+        "current-db-arch/auth-service-node.md#table-tenants"
+      ]
+    },
+    {
+      "id": "public.settings",
+      "name": "settings",
+      "description": "one dashboard-settings row per tenant, parent of the widget layout.",
+      "modules": [
+        "Tenant config and reference reads",
+        "Tenants and onboarding",
+        "Users, auth and tokens",
+        "Super admin (platform)"
+      ],
+      "ownerModule": "Tenant config and reference reads",
+      "status": "active",
+      "isolated": false,
+      "externalRefs": [],
+      "evidence": [
+        "current-db-arch/auth-service-node.md#table-settings"
+      ]
+    },
+    {
+      "id": "public.widgets",
+      "name": "widgets",
+      "description": "dashboard widget layout (name, grid position and size) per settings row.",
+      "modules": [
+        "Tenant config and reference reads"
+      ],
+      "ownerModule": "Tenant config and reference reads",
+      "status": "uncertain",
+      "isolated": false,
+      "externalRefs": [],
+      "evidence": [
+        "current-db-arch/auth-service-node.md#table-widgets"
+      ]
+    },
+    {
+      "id": "public.users",
+      "name": "users",
+      "description": "every login identity: tenant employees, tenant admins, client users and the platform super admin (tenant_id NULL).",
+      "modules": [
+        "Users, auth and tokens",
+        "Tenants and onboarding",
+        "Roles and access policies",
+        "Policy documents and categories",
+        "Feedback",
+        "Email events (service-to-service)",
+        "Super admin (platform)",
+        "Service-to-service public API",
+        "Scheduler and sync crons",
+        "Auth middleware",
+        "Outbound service write-back",
+        "Mailers",
+        "Maintenance scripts",
+        "Seeds"
+      ],
+      "ownerModule": "Users, auth and tokens",
+      "status": "active",
+      "isolated": false,
+      "externalRefs": [
+        {
+          "target": "job-service team members; attendance, finance, spark-assist employees/users",
+          "columns": "team_member_id, reporting_manager_id, attendance_employee_id, finance_employee_id, ai_assistant_user_id",
+          "cardinality": "1 to 1 (inferred)",
+          "enforcement": "None (other databases)"
+        }
+      ],
+      "evidence": [
+        "current-db-arch/auth-service-node.md#table-users"
+      ]
+    },
+    {
+      "id": "public.tokens",
+      "name": "tokens",
+      "description": "one-time email tokens for invites, password reset, admin email verification and tenant onboarding.",
+      "modules": [
+        "Users, auth and tokens",
+        "Tenants and onboarding",
+        "Email events (service-to-service)",
+        "Super admin (platform)",
+        "Service-to-service public API",
+        "Auth middleware"
+      ],
+      "ownerModule": "Users, auth and tokens",
+      "status": "active",
+      "isolated": false,
+      "externalRefs": [],
+      "evidence": [
+        "current-db-arch/auth-service-node.md#table-tokens"
+      ]
+    },
+    {
+      "id": "public.roles",
+      "name": "roles",
+      "description": "tenant roles. Each tenant gets a built-in Admin (is_custom = is_removable = is_default = false) and a Default role on creation (app/models/tenant.js:41-73); tenants add custom roles.",
+      "modules": [
+        "Roles and access policies",
+        "Tenants and onboarding",
+        "Users, auth and tokens",
+        "Super admin (platform)",
+        "Service-to-service public API",
+        "Scheduler and sync crons",
+        "Auth middleware",
+        "Maintenance scripts",
+        "Seeds"
+      ],
+      "ownerModule": "Roles and access policies",
+      "status": "active",
+      "isolated": false,
+      "externalRefs": [
+        {
+          "target": "attendance roles, job-service team members",
+          "columns": "roles.id stored as role_external_id / role_id",
+          "cardinality": "1 to many (inferred)",
+          "enforcement": "None"
+        }
+      ],
+      "evidence": [
+        "current-db-arch/auth-service-node.md#table-roles"
+      ]
+    },
+    {
+      "id": "public.policies",
+      "name": "policies",
+      "description": "permission grants. One row per (role, service) or (role, custom permission), with allowed scopes and a navigation order.",
+      "modules": [
+        "Roles and access policies",
+        "Tenants and onboarding",
+        "Users, auth and tokens",
+        "Super admin (platform)",
+        "Service-to-service public API",
+        "Auth middleware",
+        "Maintenance scripts",
+        "Seeds"
+      ],
+      "ownerModule": "Roles and access policies",
+      "status": "active",
+      "isolated": false,
+      "externalRefs": [],
+      "evidence": [
+        "current-db-arch/auth-service-node.md#table-policies"
+      ]
+    },
+    {
+      "id": "public.policy_category",
+      "name": "policy_category",
+      "description": "per-tenant category labels (with a colour) for policy documents.",
+      "modules": [
+        "Policy documents and categories",
+        "Tenants and onboarding",
+        "Super admin (platform)",
+        "Service-to-service public API"
+      ],
+      "ownerModule": "Policy documents and categories",
+      "status": "active",
+      "isolated": false,
+      "externalRefs": [],
+      "evidence": [
+        "current-db-arch/auth-service-node.md#table-policy_category"
+      ]
+    },
+    {
+      "id": "public.policy_document",
+      "name": "policy_document",
+      "description": "tenant policy documents (name, S3 file key, summary, upload date).",
+      "modules": [
+        "Policy documents and categories",
+        "Tenants and onboarding",
+        "Service-to-service public API"
+      ],
+      "ownerModule": "Policy documents and categories",
+      "status": "active",
+      "isolated": false,
+      "externalRefs": [],
+      "evidence": [
+        "current-db-arch/auth-service-node.md#table-policy_document"
+      ]
+    },
+    {
+      "id": "public._PolicyCategoryToPolicyDocument",
+      "name": "_PolicyCategoryToPolicyDocument",
+      "description": "links documents to categories. Column A holds the policy_category id and B the policy_document id (alphabetical model order).",
+      "modules": [
+        "Policy documents and categories"
+      ],
+      "ownerModule": "Policy documents and categories",
+      "status": "active",
+      "isolated": false,
+      "externalRefs": [],
+      "evidence": [
+        "current-db-arch/auth-service-node.md#table-_policycategorytopolicydocument"
+      ]
+    },
+    {
+      "id": "public.clients",
+      "name": "clients",
+      "description": "tenant client companies with a contact person.",
+      "modules": [
+        "Clients",
+        "Users, auth and tokens"
+      ],
+      "ownerModule": "Clients",
+      "status": "uncertain",
+      "isolated": false,
+      "externalRefs": [],
+      "evidence": [
+        "current-db-arch/auth-service-node.md#table-clients"
+      ]
+    },
+    {
+      "id": "public.feedback",
+      "name": "feedback",
+      "description": "user feedback reports.",
+      "modules": [
+        "Feedback",
+        "Super admin (platform)"
+      ],
+      "ownerModule": "Feedback",
+      "status": "active",
+      "isolated": false,
+      "externalRefs": [],
+      "evidence": [
+        "current-db-arch/auth-service-node.md#table-feedback"
+      ]
+    },
+    {
+      "id": "public.sectors",
+      "name": "sectors",
+      "description": "platform list of industry sectors a tenant belongs to (52 seeded names).",
+      "modules": [
+        "Super admin (platform)",
+        "Tenants and onboarding",
+        "Tenant config and reference reads",
+        "Service-to-service public API",
+        "Seeds"
+      ],
+      "ownerModule": "Super admin (platform)",
+      "status": "active",
+      "isolated": false,
+      "externalRefs": [
+        {
+          "target": "job-service organisations",
+          "columns": "organisations.department_id holds sectors.id",
+          "cardinality": "1 to many (inferred)",
+          "enforcement": "None"
+        }
+      ],
+      "evidence": [
+        "current-db-arch/auth-service-node.md#table-sectors"
+      ]
+    },
+    {
+      "id": "public.themes",
+      "name": "themes",
+      "description": "platform list of theme names (inferred: UI themes).",
+      "modules": [
+        "Super admin (platform)",
+        "Tenant config and reference reads"
+      ],
+      "ownerModule": "Super admin (platform)",
+      "status": "uncertain",
+      "isolated": true,
+      "externalRefs": [],
+      "evidence": [
+        "current-db-arch/auth-service-node.md#table-themes"
+      ]
+    },
+    {
+      "id": "public.tier",
+      "name": "tier",
+      "description": "subscription tiers. subscriptions lists the features (SubscriptionStatus values) a tenant on the tier can use; it bounds the policies each role may hold and is returned by verify-token to every service.",
+      "modules": [
+        "Super admin (platform)",
+        "Tenants and onboarding",
+        "Tenant config and reference reads",
+        "Users, auth and tokens",
+        "Roles and access policies",
+        "Service-to-service public API",
+        "Maintenance scripts"
+      ],
+      "ownerModule": "Super admin (platform)",
+      "status": "active",
+      "isolated": false,
+      "externalRefs": [],
+      "evidence": [
+        "current-db-arch/auth-service-node.md#table-tier"
+      ]
+    },
+    {
+      "id": "public.app_settings",
+      "name": "app_settings",
+      "description": "platform-wide email settings: feedback recipient, support email and image URLs used by email templates in this and other services.",
+      "modules": [
+        "Super admin (platform)",
+        "Tenants and onboarding",
+        "Users, auth and tokens",
+        "Feedback",
+        "Service-to-service public API",
+        "Mailers",
+        "Seeds"
+      ],
+      "ownerModule": "Super admin (platform)",
+      "status": "active",
+      "isolated": true,
+      "externalRefs": [],
+      "evidence": [
+        "current-db-arch/auth-service-node.md#table-app_settings"
+      ]
+    },
+    {
+      "id": "public.custom_permissions",
+      "name": "custom_permissions",
+      "description": "per-tenant permission keys defined outside auth (finance-service-node pushes its key set), granted to roles through policies.custom_permission_id.",
+      "modules": [
+        "Service-to-service public API",
+        "Tenant config and reference reads",
+        "Users, auth and tokens",
+        "Roles and access policies",
+        "Auth middleware"
+      ],
+      "ownerModule": "Service-to-service public API",
+      "status": "active",
+      "isolated": false,
+      "externalRefs": [],
+      "evidence": [
+        "current-db-arch/auth-service-node.md#table-custom_permissions"
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "id": "tenants_tier_id_fkey",
+      "source": "public.tier",
+      "target": "public.tenants",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "tier_id",
+      "enforced": true,
+      "constraintName": "tenants_tier_id_fkey",
+      "onDelete": "RESTRICT",
+      "evidence": [
+        "current-db-arch/auth-service-node.md#table-tenants"
+      ],
+      "docCardinality": "many tenants to 1 tier (required)",
+      "enforcement": "Declared FK, RESTRICT"
+    },
+    {
+      "id": "tenants_sector_id_fkey",
+      "source": "public.sectors",
+      "target": "public.tenants",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "sector_id",
+      "enforced": true,
+      "constraintName": "tenants_sector_id_fkey",
+      "onDelete": "SET NULL",
+      "evidence": [
+        "current-db-arch/auth-service-node.md#table-tenants"
+      ],
+      "docCardinality": "many to 0..1",
+      "enforcement": "Declared FK, SET NULL"
+    },
+    {
+      "id": "settings_tenantId_fkey",
+      "source": "public.tenants",
+      "target": "public.settings",
+      "cardinality": "1:1",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "tenantId",
+      "enforced": true,
+      "constraintName": "settings_tenantId_fkey",
+      "onDelete": "RESTRICT",
+      "evidence": [
+        "current-db-arch/auth-service-node.md#table-settings"
+      ],
+      "docCardinality": "1 to 1",
+      "enforcement": "Declared FK, RESTRICT, unique"
+    },
+    {
+      "id": "widgets_settingsId_fkey",
+      "source": "public.settings",
+      "target": "public.widgets",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "settingsId",
+      "enforced": true,
+      "constraintName": "widgets_settingsId_fkey",
+      "onDelete": "SET NULL",
+      "evidence": [
+        "current-db-arch/auth-service-node.md#table-widgets"
+      ],
+      "docCardinality": "many to 0..1",
+      "enforcement": "Declared FK, SET NULL"
+    },
+    {
+      "id": "users_tenant_id_fkey",
+      "source": "public.tenants",
+      "target": "public.users",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "tenant_id",
+      "enforced": true,
+      "constraintName": "users_tenant_id_fkey",
+      "onDelete": "SET NULL",
+      "evidence": [
+        "current-db-arch/auth-service-node.md#table-users"
+      ],
+      "docCardinality": "many to 0..1",
+      "enforcement": "Declared FK, SET NULL"
+    },
+    {
+      "id": "users_role_id_fkey",
+      "source": "public.roles",
+      "target": "public.users",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "role_id",
+      "enforced": true,
+      "constraintName": "users_role_id_fkey",
+      "onDelete": "SET NULL",
+      "evidence": [
+        "current-db-arch/auth-service-node.md#table-users"
+      ],
+      "docCardinality": "many to 0..1",
+      "enforcement": "Declared FK, SET NULL"
+    },
+    {
+      "id": "users_client_id_fkey",
+      "source": "public.clients",
+      "target": "public.users",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "client_id",
+      "enforced": true,
+      "constraintName": "users_client_id_fkey",
+      "onDelete": "SET NULL",
+      "evidence": [
+        "current-db-arch/auth-service-node.md#table-users"
+      ],
+      "docCardinality": "many to 0..1",
+      "enforcement": "Declared FK, SET NULL"
+    },
+    {
+      "id": "logical_users_invited_by",
+      "source": "public.users",
+      "target": "public.users",
+      "cardinality": "1:n",
+      "kind": "logical_relationship",
+      "sourceColumn": "id",
+      "targetColumn": "invited_by",
+      "enforced": false,
+      "constraintName": null,
+      "onDelete": null,
+      "evidence": [
+        "current-db-arch/auth-service-node.md#table-users"
+      ],
+      "docCardinality": "many to 0..1",
+      "enforcement": "Inferred from code (users.controller.js:820,831 write; :90-93,891-893 read); no FK"
+    },
+    {
+      "id": "tokens_user_id_fkey",
+      "source": "public.users",
+      "target": "public.tokens",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "user_id",
+      "enforced": true,
+      "constraintName": "tokens_user_id_fkey",
+      "onDelete": "SET NULL",
+      "evidence": [
+        "current-db-arch/auth-service-node.md#table-tokens"
+      ],
+      "docCardinality": "many to 0..1",
+      "enforcement": "Declared FK, SET NULL"
+    },
+    {
+      "id": "tokens_tenant_id_fkey",
+      "source": "public.tenants",
+      "target": "public.tokens",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "tenant_id",
+      "enforced": true,
+      "constraintName": "tokens_tenant_id_fkey",
+      "onDelete": "RESTRICT",
+      "evidence": [
+        "current-db-arch/auth-service-node.md#table-tokens"
+      ],
+      "docCardinality": "many to 1",
+      "enforcement": "Declared FK, RESTRICT"
+    },
+    {
+      "id": "roles_tenant_id_fkey",
+      "source": "public.tenants",
+      "target": "public.roles",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "tenant_id",
+      "enforced": true,
+      "constraintName": "roles_tenant_id_fkey",
+      "onDelete": "RESTRICT",
+      "evidence": [
+        "current-db-arch/auth-service-node.md#table-roles"
+      ],
+      "docCardinality": "many to 1",
+      "enforcement": "Declared FK, RESTRICT"
+    },
+    {
+      "id": "policies_role_id_fkey",
+      "source": "public.roles",
+      "target": "public.policies",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "role_id",
+      "enforced": true,
+      "constraintName": "policies_role_id_fkey",
+      "onDelete": "RESTRICT",
+      "evidence": [
+        "current-db-arch/auth-service-node.md#table-policies"
+      ],
+      "docCardinality": "many to 1",
+      "enforcement": "Declared FK, RESTRICT"
+    },
+    {
+      "id": "policies_custom_permission_id_fkey",
+      "source": "public.custom_permissions",
+      "target": "public.policies",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "custom_permission_id",
+      "enforced": true,
+      "constraintName": "policies_custom_permission_id_fkey",
+      "onDelete": "SET NULL",
+      "evidence": [
+        "current-db-arch/auth-service-node.md#table-policies"
+      ],
+      "docCardinality": "many to 0..1",
+      "enforcement": "Declared FK, SET NULL"
+    },
+    {
+      "id": "policy_category_tenant_id_fkey",
+      "source": "public.tenants",
+      "target": "public.policy_category",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "tenant_id",
+      "enforced": true,
+      "constraintName": "policy_category_tenant_id_fkey",
+      "onDelete": "SET NULL",
+      "evidence": [
+        "current-db-arch/auth-service-node.md#table-policy_category"
+      ],
+      "docCardinality": "many to 0..1",
+      "enforcement": "Declared FK, SET NULL"
+    },
+    {
+      "id": "policy_document_tenant_id_fkey",
+      "source": "public.tenants",
+      "target": "public.policy_document",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "tenant_id",
+      "enforced": true,
+      "constraintName": "policy_document_tenant_id_fkey",
+      "onDelete": "SET NULL",
+      "evidence": [
+        "current-db-arch/auth-service-node.md#table-policy_document"
+      ],
+      "docCardinality": "many to 0..1",
+      "enforcement": "Declared FK, SET NULL"
+    },
+    {
+      "id": "_PolicyCategoryToPolicyDocument_A_fkey",
+      "source": "public.policy_category",
+      "target": "public._PolicyCategoryToPolicyDocument",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "A",
+      "enforced": true,
+      "constraintName": "_PolicyCategoryToPolicyDocument_A_fkey",
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/auth-service-node.md#table-_policycategorytopolicydocument"
+      ],
+      "docCardinality": "many to 1",
+      "enforcement": "Declared FK, CASCADE"
+    },
+    {
+      "id": "_PolicyCategoryToPolicyDocument_B_fkey",
+      "source": "public.policy_document",
+      "target": "public._PolicyCategoryToPolicyDocument",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "B",
+      "enforced": true,
+      "constraintName": "_PolicyCategoryToPolicyDocument_B_fkey",
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/auth-service-node.md#table-_policycategorytopolicydocument"
+      ],
+      "docCardinality": "many to 1",
+      "enforcement": "Declared FK, CASCADE"
+    },
+    {
+      "id": "clients_tenant_id_fkey",
+      "source": "public.tenants",
+      "target": "public.clients",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "tenant_id",
+      "enforced": true,
+      "constraintName": "clients_tenant_id_fkey",
+      "onDelete": "RESTRICT",
+      "evidence": [
+        "current-db-arch/auth-service-node.md#table-clients"
+      ],
+      "docCardinality": "many to 1",
+      "enforcement": "Declared FK, RESTRICT"
+    },
+    {
+      "id": "feedback_user_id_fkey",
+      "source": "public.users",
+      "target": "public.feedback",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "user_id",
+      "enforced": true,
+      "constraintName": "feedback_user_id_fkey",
+      "onDelete": "SET NULL",
+      "evidence": [
+        "current-db-arch/auth-service-node.md#table-feedback"
+      ],
+      "docCardinality": "many to 0..1",
+      "enforcement": "Declared FK, SET NULL"
+    },
+    {
+      "id": "custom_permissions_tenant_id_fkey",
+      "source": "public.tenants",
+      "target": "public.custom_permissions",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "tenant_id",
+      "enforced": true,
+      "constraintName": "custom_permissions_tenant_id_fkey",
+      "onDelete": "RESTRICT",
+      "evidence": [
+        "current-db-arch/auth-service-node.md#table-custom_permissions"
+      ],
+      "docCardinality": "many to 1",
+      "enforcement": "Declared FK, RESTRICT"
+    },
+    {
+      "id": "m2m_policy_category_policy_document_via__PolicyCategoryToPolicyDocument",
+      "source": "public.policy_category",
+      "target": "public.policy_document",
+      "cardinality": "m:n",
+      "kind": "conceptual_many_to_many",
+      "junctionTable": "_PolicyCategoryToPolicyDocument",
+      "sourceColumn": "id",
+      "targetColumn": "id",
+      "enforced": false,
+      "constraintName": null,
+      "onDelete": null,
+      "evidence": [
+        "current-db-arch/auth-service-node.md#table-_policycategorytopolicydocument"
+      ]
+    }
+  ],
+  "unresolved": [
+    "Logical, not modelled as an edge (no column mapping, doc excludes it from relationship metrics): policies <-> tier: policies.service must be in the tenant's tier.subscriptions; Inferred, enforced by tier sync (app/helpers/tenants.helper.js:42-80)",
+    "Logical, not modelled as an edge (no column mapping, doc excludes it from relationship metrics): tier <-> policies: policies.service in tier.subscriptions of the role's tenant; Inferred, app-level sync"
+  ]
+}

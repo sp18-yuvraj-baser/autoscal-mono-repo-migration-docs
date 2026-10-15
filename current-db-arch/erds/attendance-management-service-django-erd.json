@@ -1,0 +1,4727 @@
+{
+  "service": "attendance-management-service-django",
+  "generatedAt": "2026-10-15T08:57:09.389Z",
+  "stats": {
+    "totalTables": 85,
+    "physicalRelationships": 153,
+    "conceptualRelationships": 8,
+    "inferredRelationships": 15,
+    "totalRelationships": 176,
+    "modules": 10,
+    "isolatedTables": 6,
+    "cardinalityBreakdown": {
+      "1:1": 21,
+      "1:n": 145,
+      "m:n": 10
+    },
+    "statusBreakdown": {
+      "active": 74,
+      "uncertain": 8,
+      "apparently_unused": 2,
+      "legacy": 1
+    }
+  },
+  "hub": "public.account_employee",
+  "modules": [
+    "Clock-in & Time Entries",
+    "Attendance Adjustments",
+    "Reports & Reconciliation",
+    "WFH",
+    "Leave Configuration",
+    "Leave Requests & Balances",
+    "Accrual & Year End",
+    "Holidays & Regions",
+    "Employees & Roles",
+    "Platform & Shared Infrastructure"
+  ],
+  "nodes": [
+    {
+      "id": "public.account_employee",
+      "name": "account_employee",
+      "description": "Local mirror of an auth-service user / job-service team member inside one tenant. It is the identity anchor for every attendance, WFH and leave row in this service (about 45 single-column FKs and 5 composite FKs point at it).",
+      "modules": [
+        "Employees & Roles",
+        "Clock-in & Time Entries",
+        "Attendance Adjustments",
+        "Reports & Reconciliation",
+        "WFH",
+        "Leave Configuration",
+        "Leave Requests & Balances",
+        "Accrual & Year End",
+        "Platform & Shared Infrastructure"
+      ],
+      "ownerModule": "Employees & Roles",
+      "status": "active",
+      "category": "model",
+      "isolated": false,
+      "externalRefs": [
+        {
+          "target": "auth-service tenant",
+          "columns": "tenant_id",
+          "cardinality": "N:1",
+          "enforcement": "Logical only (no FK): account/views.py:60-62, auth-service-node/services/attendanceService/employee.js (tenant.id)"
+        },
+        {
+          "target": "auth-service user",
+          "columns": "user_id",
+          "cardinality": "1:1 per tenant (not enforced)",
+          "enforcement": "Logical only (no FK): auth-service-node/services/attendanceService/employee.js (user_id: id), core/auth_service/backends.py:397"
+        }
+      ],
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-account_employee"
+      ]
+    },
+    {
+      "id": "public.account_role",
+      "name": "account_role",
+      "description": "Local mirror of auth-service roles per tenant, used as an approval assignee type (leave, WFH, attendance adjustment approval chains).",
+      "modules": [
+        "Employees & Roles",
+        "Attendance Adjustments",
+        "WFH",
+        "Leave Configuration",
+        "Leave Requests & Balances"
+      ],
+      "ownerModule": "Employees & Roles",
+      "status": "active",
+      "category": "model",
+      "isolated": false,
+      "externalRefs": [
+        {
+          "target": "auth-service role",
+          "columns": "(tenant_id, role_external_id)",
+          "cardinality": "1:1",
+          "enforcement": "Logical only (no FK): auth-service-node/services/attendanceService/role.js:34"
+        },
+        {
+          "target": "auth-service tenant",
+          "columns": "tenant_id",
+          "cardinality": "N:1",
+          "enforcement": "Logical only (no FK): account/views.py:60-62"
+        }
+      ],
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-account_role"
+      ]
+    },
+    {
+      "id": "public.attendance_adjustment_approval_assignee",
+      "name": "attendance_adjustment_approval_assignee",
+      "description": "Who approves at a level: a role, a specific employee, the requester's reporting manager or project manager(s).",
+      "modules": [
+        "Attendance Adjustments"
+      ],
+      "ownerModule": "Attendance Adjustments",
+      "status": "active",
+      "category": "model",
+      "isolated": false,
+      "externalRefs": [],
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-attendance_adjustment_approval_assignee"
+      ]
+    },
+    {
+      "id": "public.attendance_adjustment_approval_config",
+      "name": "attendance_adjustment_approval_config",
+      "description": "Per-tenant switchboard for the attendance adjustment approval chain (requires approval, auto-approve if no approver, suppress approver emails).",
+      "modules": [
+        "Attendance Adjustments"
+      ],
+      "ownerModule": "Attendance Adjustments",
+      "status": "active",
+      "category": "model",
+      "isolated": false,
+      "externalRefs": [
+        {
+          "target": "auth-service tenant",
+          "columns": "tenant_id",
+          "cardinality": "1:1",
+          "enforcement": "Logical only (no FK): attendance/views/attendance_adjustment_approval.py:52-53, attendance/serializers/attendance_adjustment_approval.py:169-174"
+        }
+      ],
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-attendance_adjustment_approval_config"
+      ]
+    },
+    {
+      "id": "public.attendance_adjustment_approval_level",
+      "name": "attendance_adjustment_approval_level",
+      "description": "Ordered approval levels of a tenant's adjustment approval chain, with escalation delay per level.",
+      "modules": [
+        "Attendance Adjustments"
+      ],
+      "ownerModule": "Attendance Adjustments",
+      "status": "active",
+      "category": "model",
+      "isolated": false,
+      "externalRefs": [],
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-attendance_adjustment_approval_level"
+      ]
+    },
+    {
+      "id": "public.attendance_admin_setting",
+      "name": "attendance_admin_setting",
+      "description": "One row per tenant holding office start and end time (UTC) used as the default working window for attendance summaries.",
+      "modules": [
+        "Clock-in & Time Entries",
+        "Attendance Adjustments"
+      ],
+      "ownerModule": "Clock-in & Time Entries",
+      "status": "active",
+      "category": "model",
+      "isolated": true,
+      "externalRefs": [
+        {
+          "target": "auth-service tenant",
+          "columns": "tenant_id",
+          "cardinality": "1:1",
+          "enforcement": "Logical only (no FK): attendance/views/attendance_admin_settings.py:46-47,99 (set from request.tenant_id)"
+        }
+      ],
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-attendance_admin_setting"
+      ]
+    },
+    {
+      "id": "public.attendance_attendance",
+      "name": "attendance_attendance",
+      "description": "One employee's attendance day (date + day type), grouping raw punches and adjusted punches through two M2M tables.",
+      "modules": [
+        "Clock-in & Time Entries",
+        "Attendance Adjustments",
+        "Reports & Reconciliation",
+        "Leave Requests & Balances",
+        "Accrual & Year End",
+        "Platform & Shared Infrastructure"
+      ],
+      "ownerModule": "Clock-in & Time Entries",
+      "status": "active",
+      "category": "model",
+      "isolated": false,
+      "externalRefs": [
+        {
+          "target": "auth-service tenant",
+          "columns": "tenant_id",
+          "cardinality": "N:1",
+          "enforcement": "Logical only (no FK): core/utils/models.py:33-35, requests scoped by request.tenant_id (attendance/views/summary.py:66-67)"
+        }
+      ],
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-attendance_attendance"
+      ]
+    },
+    {
+      "id": "public.attendance_attendance_adjusted_time_entries",
+      "name": "attendance_attendance_adjusted_time_entries",
+      "description": "Links an attendance day to the punches that should replace the raw ones after an approved adjustment.",
+      "modules": [
+        "Attendance Adjustments",
+        "Clock-in & Time Entries",
+        "Reports & Reconciliation"
+      ],
+      "ownerModule": "Attendance Adjustments",
+      "status": "active",
+      "category": "auto m2m",
+      "isolated": false,
+      "externalRefs": [],
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-attendance_attendance_adjusted_time_entries"
+      ]
+    },
+    {
+      "id": "public.attendance_attendance_time_entries",
+      "name": "attendance_attendance_time_entries",
+      "description": "Links an attendance day to its raw clock-in/clock-out punches.",
+      "modules": [
+        "Clock-in & Time Entries",
+        "Attendance Adjustments",
+        "Reports & Reconciliation"
+      ],
+      "ownerModule": "Clock-in & Time Entries",
+      "status": "active",
+      "category": "auto m2m",
+      "isolated": false,
+      "externalRefs": [],
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-attendance_attendance_time_entries"
+      ]
+    },
+    {
+      "id": "public.attendance_locationaddress",
+      "name": "attendance_locationaddress",
+      "description": "Geo/address snapshot captured with a clock-in or clock-out punch. Each row belongs to at most one attendance_timeentry row (OneToOne from the time entry side).",
+      "modules": [
+        "Clock-in & Time Entries",
+        "Platform & Shared Infrastructure"
+      ],
+      "ownerModule": "Clock-in & Time Entries",
+      "status": "active",
+      "category": "model",
+      "isolated": false,
+      "externalRefs": [],
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-attendance_locationaddress"
+      ]
+    },
+    {
+      "id": "public.attendance_timeentry",
+      "name": "attendance_timeentry",
+      "description": "One punch (clock-in or clock-out) or one adjustment-generated punch. Linked to its day via attendance_attendance_time_entries (raw punches) or attendance_attendance_adjusted_time_entries (approved adjustments).",
+      "modules": [
+        "Clock-in & Time Entries",
+        "Attendance Adjustments",
+        "Reports & Reconciliation",
+        "Platform & Shared Infrastructure"
+      ],
+      "ownerModule": "Clock-in & Time Entries",
+      "status": "active",
+      "category": "model",
+      "isolated": false,
+      "externalRefs": [
+        {
+          "target": "auth-service tenant",
+          "columns": "tenant_id",
+          "cardinality": "N:1",
+          "enforcement": "Logical only (no FK): attendance/views/time_entries.py:156, attendance/helpers/attendance_adjustment.py:28"
+        }
+      ],
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-attendance_timeentry"
+      ]
+    },
+    {
+      "id": "public.attendance_timeentryadjustmentlog",
+      "name": "attendance_timeentryadjustmentlog",
+      "description": "Employee request to correct clock-in/clock-out for a past date, with approval workflow state (pending, approved, rejected, cancelled) and escalation level.",
+      "modules": [
+        "Attendance Adjustments",
+        "Platform & Shared Infrastructure"
+      ],
+      "ownerModule": "Attendance Adjustments",
+      "status": "active",
+      "category": "model",
+      "isolated": false,
+      "externalRefs": [
+        {
+          "target": "auth-service tenant",
+          "columns": "tenant_id",
+          "cardinality": "N:1",
+          "enforcement": "Logical only (no FK): attendance/tasks.py:1050-1053 filters by auth-service active tenants"
+        }
+      ],
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-attendance_timeentryadjustmentlog"
+      ]
+    },
+    {
+      "id": "public.attendance_wfhaccrualsetting",
+      "name": "attendance_wfhaccrualsetting",
+      "description": "One accrual configuration per WFH policy: yearly quota or unlimited, immediate vs periodic accrual, frequency, per-period amount and per-month/quarter/half-year overrides.",
+      "modules": [
+        "WFH"
+      ],
+      "ownerModule": "WFH",
+      "status": "active",
+      "category": "model",
+      "isolated": false,
+      "externalRefs": [],
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-attendance_wfhaccrualsetting"
+      ]
+    },
+    {
+      "id": "public.attendance_wfhapprovalassignee",
+      "name": "attendance_wfhapprovalassignee",
+      "description": "Who approves at a level: a role, a specific employee, the reporting manager or the project manager.",
+      "modules": [
+        "WFH",
+        "Platform & Shared Infrastructure"
+      ],
+      "ownerModule": "WFH",
+      "status": "active",
+      "category": "model",
+      "isolated": false,
+      "externalRefs": [],
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-attendance_wfhapprovalassignee"
+      ]
+    },
+    {
+      "id": "public.attendance_wfhapprovalconfig",
+      "name": "attendance_wfhapprovalconfig",
+      "description": "Approval chain header for a WFH policy: whether approval is required, auto-approve when no approver, suppress approver notifications.",
+      "modules": [
+        "WFH",
+        "Platform & Shared Infrastructure"
+      ],
+      "ownerModule": "WFH",
+      "status": "active",
+      "category": "model",
+      "isolated": false,
+      "externalRefs": [],
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-attendance_wfhapprovalconfig"
+      ]
+    },
+    {
+      "id": "public.attendance_wfhapprovallevel",
+      "name": "attendance_wfhapprovallevel",
+      "description": "Ordered levels of a WFH approval chain with optional skip-after-N-days escalation.",
+      "modules": [
+        "WFH",
+        "Platform & Shared Infrastructure"
+      ],
+      "ownerModule": "WFH",
+      "status": "active",
+      "category": "model",
+      "isolated": false,
+      "externalRefs": [],
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-attendance_wfhapprovallevel"
+      ]
+    },
+    {
+      "id": "public.attendance_wfhautoapprovenotifyassignee",
+      "name": "attendance_wfhautoapprovenotifyassignee",
+      "description": "Who is notified when a WFH request is auto-approved (role, employee, reporting manager, project manager).",
+      "modules": [
+        "WFH"
+      ],
+      "ownerModule": "WFH",
+      "status": "active",
+      "category": "model",
+      "isolated": false,
+      "externalRefs": [],
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-attendance_wfhautoapprovenotifyassignee"
+      ]
+    },
+    {
+      "id": "public.attendance_wfhpriornoticesetting",
+      "name": "attendance_wfhpriornoticesetting",
+      "description": "Prior-notice rules of a WFH policy: requests of at least min_wfh_days need calendar_days_notice calendar days and working_days_needed working days of notice.",
+      "modules": [
+        "WFH"
+      ],
+      "ownerModule": "WFH",
+      "status": "active",
+      "category": "model",
+      "isolated": false,
+      "externalRefs": [],
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-attendance_wfhpriornoticesetting"
+      ]
+    },
+    {
+      "id": "public.audit_log_entry_actor",
+      "name": "audit_log_entry_actor",
+      "description": "Records which Employee made an audited change, because auditlog's own actor FK targets Django auth users which this service does not use.",
+      "modules": [
+        "Platform & Shared Infrastructure",
+        "Leave Configuration"
+      ],
+      "ownerModule": "Platform & Shared Infrastructure",
+      "status": "active",
+      "category": "model",
+      "isolated": false,
+      "externalRefs": [],
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-audit_log_entry_actor"
+      ]
+    },
+    {
+      "id": "public.auditlog_logentry",
+      "name": "auditlog_logentry",
+      "description": "Change history (create/update/delete) of the 20 leave configuration models in MODEL_SERIALIZER_MAP (leave/utils/audit_config.py:23-44), shown by the audit history API.",
+      "modules": [
+        "Platform & Shared Infrastructure",
+        "Leave Configuration"
+      ],
+      "ownerModule": "Platform & Shared Infrastructure",
+      "status": "active",
+      "category": "framework",
+      "isolated": false,
+      "externalRefs": [
+        {
+          "target": "generic (20 leave configuration tables via content_type_id and object_pk)",
+          "columns": "(content_type_id, object_pk)",
+          "cardinality": "N:1",
+          "enforcement": "Logical only (no FK): leave/views/leave_type_view.py:489-500"
+        }
+      ],
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-auditlog_logentry"
+      ]
+    },
+    {
+      "id": "public.auth_group",
+      "name": "auth_group",
+      "description": "Django permission groups (admin only).",
+      "modules": [
+        "Platform & Shared Infrastructure"
+      ],
+      "ownerModule": "Platform & Shared Infrastructure",
+      "status": "uncertain",
+      "category": "framework",
+      "isolated": false,
+      "externalRefs": [],
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-auth_group"
+      ]
+    },
+    {
+      "id": "public.auth_group_permissions",
+      "name": "auth_group_permissions",
+      "description": "Group to permission link (admin only).",
+      "modules": [
+        "Platform & Shared Infrastructure"
+      ],
+      "ownerModule": "Platform & Shared Infrastructure",
+      "status": "uncertain",
+      "category": "framework",
+      "isolated": false,
+      "externalRefs": [],
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-auth_group_permissions"
+      ]
+    },
+    {
+      "id": "public.auth_permission",
+      "name": "auth_permission",
+      "description": "Model permissions created by post_migrate for every model.",
+      "modules": [
+        "Platform & Shared Infrastructure"
+      ],
+      "ownerModule": "Platform & Shared Infrastructure",
+      "status": "uncertain",
+      "category": "framework",
+      "isolated": false,
+      "externalRefs": [],
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-auth_permission"
+      ]
+    },
+    {
+      "id": "public.auth_user",
+      "name": "auth_user",
+      "description": "Django user accounts. Only used for Django admin login; API auth is token based against auth-service (attendance_service_django/settings.py:142-152).",
+      "modules": [
+        "Platform & Shared Infrastructure"
+      ],
+      "ownerModule": "Platform & Shared Infrastructure",
+      "status": "uncertain",
+      "category": "framework",
+      "isolated": false,
+      "externalRefs": [],
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-auth_user"
+      ]
+    },
+    {
+      "id": "public.auth_user_groups",
+      "name": "auth_user_groups",
+      "description": "User to group link (admin only).",
+      "modules": [
+        "Platform & Shared Infrastructure"
+      ],
+      "ownerModule": "Platform & Shared Infrastructure",
+      "status": "uncertain",
+      "category": "framework",
+      "isolated": false,
+      "externalRefs": [],
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-auth_user_groups"
+      ]
+    },
+    {
+      "id": "public.auth_user_user_permissions",
+      "name": "auth_user_user_permissions",
+      "description": "User to permission link (admin only).",
+      "modules": [
+        "Platform & Shared Infrastructure"
+      ],
+      "ownerModule": "Platform & Shared Infrastructure",
+      "status": "uncertain",
+      "category": "framework",
+      "isolated": false,
+      "externalRefs": [],
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-auth_user_user_permissions"
+      ]
+    },
+    {
+      "id": "public.django_admin_log",
+      "name": "django_admin_log",
+      "description": "Django admin change history.",
+      "modules": [
+        "Platform & Shared Infrastructure"
+      ],
+      "ownerModule": "Platform & Shared Infrastructure",
+      "status": "uncertain",
+      "category": "framework",
+      "isolated": false,
+      "externalRefs": [],
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-django_admin_log"
+      ]
+    },
+    {
+      "id": "public.django_content_type",
+      "name": "django_content_type",
+      "description": "Registry of installed models; populated by the post_migrate signal.",
+      "modules": [
+        "Platform & Shared Infrastructure",
+        "Leave Configuration"
+      ],
+      "ownerModule": "Platform & Shared Infrastructure",
+      "status": "active",
+      "category": "framework",
+      "isolated": false,
+      "externalRefs": [],
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-django_content_type"
+      ]
+    },
+    {
+      "id": "public.django_migrations",
+      "name": "django_migrations",
+      "description": "Records applied migrations (171 project migration files plus framework ones).",
+      "modules": [
+        "Platform & Shared Infrastructure"
+      ],
+      "ownerModule": "Platform & Shared Infrastructure",
+      "status": "active",
+      "category": "framework",
+      "isolated": true,
+      "externalRefs": [],
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-django_migrations"
+      ]
+    },
+    {
+      "id": "public.django_session",
+      "name": "django_session",
+      "description": "Database session store (default SESSION_ENGINE).",
+      "modules": [
+        "Platform & Shared Infrastructure"
+      ],
+      "ownerModule": "Platform & Shared Infrastructure",
+      "status": "uncertain",
+      "category": "framework",
+      "isolated": true,
+      "externalRefs": [],
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-django_session"
+      ]
+    },
+    {
+      "id": "public.employee_leave_balance_history",
+      "name": "employee_leave_balance_history",
+      "description": "Append-only ledger of every leave balance change (credit/debit/inactive) with a snapshot of the resulting balance, the reason, cycle and optional links to the leave request, actor and accrual log.",
+      "modules": [
+        "Leave Requests & Balances",
+        "Leave Configuration",
+        "Accrual & Year End",
+        "Employees & Roles"
+      ],
+      "ownerModule": "Leave Requests & Balances",
+      "status": "active",
+      "category": "model",
+      "isolated": false,
+      "externalRefs": [
+        {
+          "target": "auth-service tenant",
+          "columns": "tenant_id",
+          "cardinality": "N:1",
+          "enforcement": "Logical only (no FK): leave/services/employee_leave_balance_history.py:30"
+        }
+      ],
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-employee_leave_balance_history"
+      ]
+    },
+    {
+      "id": "public.employee_wfh_type_override",
+      "name": "employee_wfh_type_override",
+      "description": "Per-employee decision for a WFH type; currently only used to disable a type for an otherwise eligible employee (absence of a row means allowed).",
+      "modules": [
+        "WFH"
+      ],
+      "ownerModule": "WFH",
+      "status": "active",
+      "category": "model",
+      "isolated": false,
+      "externalRefs": [
+        {
+          "target": "auth-service tenant",
+          "columns": "tenant_id",
+          "cardinality": "N:1",
+          "enforcement": "Logical only (no FK): attendance/views/wfh/types.py:662-663"
+        }
+      ],
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-employee_wfh_type_override"
+      ]
+    },
+    {
+      "id": "public.holiday_holiday",
+      "name": "holiday_holiday",
+      "description": "Tenant holiday calendar. Used to exclude holidays from working-day, leave duration, WFH and punctuality calculations.",
+      "modules": [
+        "Holidays & Regions",
+        "Clock-in & Time Entries",
+        "Reports & Reconciliation",
+        "WFH",
+        "Leave Requests & Balances"
+      ],
+      "ownerModule": "Holidays & Regions",
+      "status": "active",
+      "category": "model",
+      "isolated": true,
+      "externalRefs": [
+        {
+          "target": "auth-service tenant",
+          "columns": "tenant_id",
+          "cardinality": "N:1",
+          "enforcement": "Logical only (no FK): holiday/views.py:30-44"
+        }
+      ],
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-holiday_holiday"
+      ]
+    },
+    {
+      "id": "public.holiday_region",
+      "name": "holiday_region",
+      "description": "Platform-wide (not tenant scoped) holiday template region, for example a country. Tenants copy its holidays into holiday_holiday.",
+      "modules": [
+        "Holidays & Regions"
+      ],
+      "ownerModule": "Holidays & Regions",
+      "status": "active",
+      "category": "model",
+      "isolated": false,
+      "externalRefs": [],
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-holiday_region"
+      ]
+    },
+    {
+      "id": "public.holiday_regionholiday",
+      "name": "holiday_regionholiday",
+      "description": "Holiday entries of a platform-wide region template.",
+      "modules": [
+        "Holidays & Regions"
+      ],
+      "ownerModule": "Holidays & Regions",
+      "status": "active",
+      "category": "model",
+      "isolated": false,
+      "externalRefs": [],
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-holiday_regionholiday"
+      ]
+    },
+    {
+      "id": "public.leave_accruallog",
+      "name": "leave_accruallog",
+      "description": "One row per accrual credit applied by the accrual engine (old/new value, amount, type, reason, optional expiry); also used as an idempotency guard (\"already allocated\").",
+      "modules": [
+        "Accrual & Year End",
+        "Platform & Shared Infrastructure"
+      ],
+      "ownerModule": "Accrual & Year End",
+      "status": "active",
+      "category": "model",
+      "isolated": false,
+      "externalRefs": [
+        {
+          "target": "auth-service tenant",
+          "columns": "tenant_id",
+          "cardinality": "N:1",
+          "enforcement": "Logical only (no FK): leave/services/leave_accrual_engine.py:1301"
+        }
+      ],
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_accruallog"
+      ]
+    },
+    {
+      "id": "public.leave_accrualratebytenure",
+      "name": "leave_accrualratebytenure",
+      "description": "Tenure slabs: days per year once an employee reaches N years from joining.",
+      "modules": [
+        "Leave Configuration",
+        "Accrual & Year End"
+      ],
+      "ownerModule": "Leave Configuration",
+      "status": "active",
+      "category": "model",
+      "isolated": false,
+      "externalRefs": [],
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_accrualratebytenure"
+      ]
+    },
+    {
+      "id": "public.leave_approvalassignee",
+      "name": "leave_approvalassignee",
+      "description": "Who approves at a level: a role, a specific employee, the reporting manager or project managers.",
+      "modules": [
+        "Leave Configuration",
+        "Leave Requests & Balances",
+        "Platform & Shared Infrastructure"
+      ],
+      "ownerModule": "Leave Configuration",
+      "status": "active",
+      "category": "model",
+      "isolated": false,
+      "externalRefs": [],
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_approvalassignee"
+      ]
+    },
+    {
+      "id": "public.leave_approvallevel",
+      "name": "leave_approvallevel",
+      "description": "Ordered approval level inside either a leave approval chain or an encashment approval chain (polymorphic via two nullable FKs).",
+      "modules": [
+        "Leave Configuration",
+        "Leave Requests & Balances",
+        "Platform & Shared Infrastructure"
+      ],
+      "ownerModule": "Leave Configuration",
+      "status": "active",
+      "category": "model",
+      "isolated": false,
+      "externalRefs": [],
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_approvallevel"
+      ]
+    },
+    {
+      "id": "public.leave_autoapprovenotifyassignee",
+      "name": "leave_autoapprovenotifyassignee",
+      "description": "People to notify when a request is auto-approved under an approval config.",
+      "modules": [
+        "Leave Configuration",
+        "Leave Requests & Balances"
+      ],
+      "ownerModule": "Leave Configuration",
+      "status": "active",
+      "category": "model",
+      "isolated": false,
+      "externalRefs": [],
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_autoapprovenotifyassignee"
+      ]
+    },
+    {
+      "id": "public.leave_bulkuploadlog",
+      "name": "leave_bulkuploadlog",
+      "description": "Tracks a bulk upload (leave type, plan or balance spreadsheet) tied to a File: category, processing flag, error.",
+      "modules": [
+        "Platform & Shared Infrastructure"
+      ],
+      "ownerModule": "Platform & Shared Infrastructure",
+      "status": "active",
+      "category": "model",
+      "isolated": false,
+      "externalRefs": [
+        {
+          "target": "auth-service tenant",
+          "columns": "tenant_id",
+          "cardinality": "N:1",
+          "enforcement": "Logical only (no FK): leave/views/bulk_upload_view.py:106"
+        }
+      ],
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_bulkuploadlog"
+      ]
+    },
+    {
+      "id": "public.leave_compoffcreditrequest",
+      "name": "leave_compoffcreditrequest",
+      "description": "Employee request to be credited comp-off days for a worked period, with approval workflow and a credited flag once the balance is topped up.",
+      "modules": [
+        "Leave Requests & Balances",
+        "Leave Configuration",
+        "Platform & Shared Infrastructure"
+      ],
+      "ownerModule": "Leave Requests & Balances",
+      "status": "active",
+      "category": "model",
+      "isolated": false,
+      "externalRefs": [
+        {
+          "target": "auth-service tenant",
+          "columns": "tenant_id",
+          "cardinality": "N:1",
+          "enforcement": "Logical only (no FK): core/utils/models.py:33"
+        }
+      ],
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_compoffcreditrequest"
+      ]
+    },
+    {
+      "id": "public.leave_compoffcreditrequest_attachments",
+      "name": "leave_compoffcreditrequest_attachments",
+      "description": "Links comp-off requests to proof-of-work files.",
+      "modules": [
+        "Leave Requests & Balances",
+        "Platform & Shared Infrastructure"
+      ],
+      "ownerModule": "Leave Requests & Balances",
+      "status": "active",
+      "category": "auto m2m",
+      "isolated": false,
+      "externalRefs": [],
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_compoffcreditrequest_attachments"
+      ]
+    },
+    {
+      "id": "public.leave_employeeleavebalance",
+      "name": "leave_employeeleavebalance",
+      "description": "Current leave balance per employee, leave type and leave plan (allocated, remaining, used). One active row per (employee, leave type, plan) by convention; older rows are kept with is_active=false.",
+      "modules": [
+        "Leave Requests & Balances",
+        "Reports & Reconciliation",
+        "Leave Configuration",
+        "Accrual & Year End",
+        "Employees & Roles",
+        "Platform & Shared Infrastructure"
+      ],
+      "ownerModule": "Leave Requests & Balances",
+      "status": "active",
+      "category": "model",
+      "isolated": false,
+      "externalRefs": [
+        {
+          "target": "auth-service tenant",
+          "columns": "tenant_id",
+          "cardinality": "N:1",
+          "enforcement": "Logical only (no FK): core/auth_service/tenants.py:169, core/utils/models.py:33"
+        }
+      ],
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_employeeleavebalance"
+      ]
+    },
+    {
+      "id": "public.leave_employeeleavelog",
+      "name": "leave_employeeleavelog",
+      "description": "The leave request (application) itself, despite the \"log\" name: dates, duration, approval/rejection/cancel state and actors, notes, notify list.",
+      "modules": [
+        "Leave Requests & Balances",
+        "Clock-in & Time Entries",
+        "Reports & Reconciliation",
+        "Leave Configuration",
+        "Accrual & Year End",
+        "Platform & Shared Infrastructure"
+      ],
+      "ownerModule": "Leave Requests & Balances",
+      "status": "active",
+      "category": "model",
+      "isolated": false,
+      "externalRefs": [
+        {
+          "target": "auth-service tenant",
+          "columns": "tenant_id",
+          "cardinality": "N:1",
+          "enforcement": "Logical only (no FK): core/auth_service/tenants.py:169"
+        }
+      ],
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_employeeleavelog"
+      ]
+    },
+    {
+      "id": "public.leave_employeeleavelog_attachments",
+      "name": "leave_employeeleavelog_attachments",
+      "description": "Links leave requests to uploaded proof files.",
+      "modules": [
+        "Leave Requests & Balances",
+        "Platform & Shared Infrastructure"
+      ],
+      "ownerModule": "Leave Requests & Balances",
+      "status": "active",
+      "category": "auto m2m",
+      "isolated": false,
+      "externalRefs": [],
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_employeeleavelog_attachments"
+      ]
+    },
+    {
+      "id": "public.leave_employeeyearendbalance",
+      "name": "leave_employeeyearendbalance",
+      "description": "Per-employee row inside a year-end run, parent of per-leave-type transactions.",
+      "modules": [
+        "Accrual & Year End",
+        "Leave Configuration",
+        "Platform & Shared Infrastructure"
+      ],
+      "ownerModule": "Accrual & Year End",
+      "status": "active",
+      "category": "model",
+      "isolated": false,
+      "externalRefs": [],
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_employeeyearendbalance"
+      ]
+    },
+    {
+      "id": "public.leave_file",
+      "name": "leave_file",
+      "description": "Metadata for files stored in S3 (leave proofs, comp-off proofs, WFH proofs, bulk uploads); key is derived from tenant, uploader, file_id and name.",
+      "modules": [
+        "Platform & Shared Infrastructure",
+        "WFH",
+        "Leave Requests & Balances"
+      ],
+      "ownerModule": "Platform & Shared Infrastructure",
+      "status": "active",
+      "category": "model",
+      "isolated": false,
+      "externalRefs": [
+        {
+          "target": "S3 object",
+          "columns": "(tenant_id, uploaded_by.team_member_id, file_id, name) -> object key",
+          "cardinality": "1:1",
+          "enforcement": "Logical only (no FK): leave/models/files.py:41"
+        },
+        {
+          "target": "auth-service tenant",
+          "columns": "tenant_id",
+          "cardinality": "N:1",
+          "enforcement": "Logical only (no FK): leave/views/file_views.py:109"
+        }
+      ],
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_file"
+      ]
+    },
+    {
+      "id": "public.leave_leaveaccrualconfig",
+      "name": "leave_leaveaccrualconfig",
+      "description": "Accrual panel for one plan/type config: yearly quota, accrual frequency and amounts, comp-off request rules, expiry, attendance-based restrictions, negative balance and tenure-based accrual switches.",
+      "modules": [
+        "Leave Configuration",
+        "Leave Requests & Balances",
+        "Accrual & Year End",
+        "Employees & Roles",
+        "Platform & Shared Infrastructure"
+      ],
+      "ownerModule": "Leave Configuration",
+      "status": "active",
+      "category": "model",
+      "isolated": false,
+      "externalRefs": [],
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_leaveaccrualconfig"
+      ]
+    },
+    {
+      "id": "public.leave_leaveaccrualconfig_restricted_leave_types",
+      "name": "leave_leaveaccrualconfig_restricted_leave_types",
+      "description": "Leave types whose usage restricts accrual for this accrual config (attendance-based restriction).",
+      "modules": [
+        "Leave Configuration",
+        "Accrual & Year End"
+      ],
+      "ownerModule": "Leave Configuration",
+      "status": "active",
+      "category": "auto m2m",
+      "isolated": false,
+      "externalRefs": [],
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_leaveaccrualconfig_restricted_leave_types"
+      ]
+    },
+    {
+      "id": "public.leave_leaveapplicationconfig",
+      "name": "leave_leaveapplicationconfig",
+      "description": "\"Applying leave\" panel: half/quarter day, prior notice switch, backdating limits, same-day cutoff, balance rounding, comment requirement, floater and calendar-day counting.",
+      "modules": [
+        "Leave Configuration",
+        "Leave Requests & Balances"
+      ],
+      "ownerModule": "Leave Configuration",
+      "status": "active",
+      "category": "model",
+      "isolated": false,
+      "externalRefs": [],
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_leaveapplicationconfig"
+      ]
+    },
+    {
+      "id": "public.leave_leaveapplicationrestrictionconfig",
+      "name": "leave_leaveapplicationrestrictionconfig",
+      "description": "\"Leave application restrictions\" panel: self-apply block, attachment rule, early/future application, same-year usage, balance and combination restrictions, minimum request size.",
+      "modules": [
+        "Leave Configuration",
+        "Leave Requests & Balances"
+      ],
+      "ownerModule": "Leave Configuration",
+      "status": "active",
+      "category": "model",
+      "isolated": false,
+      "externalRefs": [],
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_leaveapplicationrestrictionconfig"
+      ]
+    },
+    {
+      "id": "public.leave_leaveapplicationrestrictionconfig_cannot_be_availed_w3b41",
+      "name": "leave_leaveapplicationrestrictionconfig_cannot_be_availed_w3b41",
+      "description": "Leave types that cannot be combined with this leave type in adjacent requests.",
+      "modules": [
+        "Leave Configuration",
+        "Leave Requests & Balances"
+      ],
+      "ownerModule": "Leave Configuration",
+      "status": "active",
+      "category": "auto m2m",
+      "isolated": false,
+      "externalRefs": [],
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_leaveapplicationrestrictionconfig_cannot_be_availed_w3b41"
+      ]
+    },
+    {
+      "id": "public.leave_leaveapplicationrestrictionconfig_unavailable_types",
+      "name": "leave_leaveapplicationrestrictionconfig_unavailable_types",
+      "description": "Leave types whose remaining balance makes this leave type unavailable.",
+      "modules": [
+        "Leave Configuration",
+        "Leave Requests & Balances"
+      ],
+      "ownerModule": "Leave Configuration",
+      "status": "active",
+      "category": "auto m2m",
+      "isolated": false,
+      "externalRefs": [],
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_leaveapplicationrestrictionconfig_unavailable_types"
+      ]
+    },
+    {
+      "id": "public.leave_leaveapprovalconfig",
+      "name": "leave_leaveapprovalconfig",
+      "description": "Approval chain header for a plan/type config, either for regular leave or for comp-off credit requests.",
+      "modules": [
+        "Leave Configuration",
+        "Leave Requests & Balances",
+        "Platform & Shared Infrastructure"
+      ],
+      "ownerModule": "Leave Configuration",
+      "status": "active",
+      "category": "model",
+      "isolated": false,
+      "externalRefs": [],
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_leaveapprovalconfig"
+      ]
+    },
+    {
+      "id": "public.leave_leavecarryforwardconfig",
+      "name": "leave_leavecarryforwardconfig",
+      "description": "Year-end carry-forward strategy for a plan/type config, optional target leave type and expiry.",
+      "modules": [
+        "Leave Configuration",
+        "Accrual & Year End"
+      ],
+      "ownerModule": "Leave Configuration",
+      "status": "active",
+      "category": "model",
+      "isolated": false,
+      "externalRefs": [],
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_leavecarryforwardconfig"
+      ]
+    },
+    {
+      "id": "public.leave_leaveencashmentapprovalconfig",
+      "name": "leave_leaveencashmentapprovalconfig",
+      "description": "Intended approval header for encashment requests (levels in leave_approvallevel).",
+      "modules": [
+        "Leave Configuration",
+        "Platform & Shared Infrastructure"
+      ],
+      "ownerModule": "Leave Configuration",
+      "status": "apparently_unused",
+      "category": "model",
+      "isolated": false,
+      "externalRefs": [],
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_leaveencashmentapprovalconfig"
+      ]
+    },
+    {
+      "id": "public.leave_leaveencashmentapprover",
+      "name": "leave_leaveencashmentapprover",
+      "description": "Intended assignees for encashment approval levels; uses plain UUID columns, the pattern leave_approvalassignee abandoned in 0041.",
+      "modules": [
+        "Leave Configuration",
+        "Platform & Shared Infrastructure"
+      ],
+      "ownerModule": "Leave Configuration",
+      "status": "apparently_unused",
+      "category": "model",
+      "isolated": false,
+      "externalRefs": [],
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_leaveencashmentapprover"
+      ]
+    },
+    {
+      "id": "public.leave_leaveencashmentconfig",
+      "name": "leave_leaveencashmentconfig",
+      "description": "Encashment rules for a plan/type config: allowed or not, frequency limit, allowed months, manager application, fixed or percentage mode.",
+      "modules": [
+        "Leave Configuration",
+        "Accrual & Year End"
+      ],
+      "ownerModule": "Leave Configuration",
+      "status": "active",
+      "category": "model",
+      "isolated": false,
+      "externalRefs": [],
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_leaveencashmentconfig"
+      ]
+    },
+    {
+      "id": "public.leave_leaveencashmentthreshold",
+      "name": "leave_leaveencashmentthreshold",
+      "description": "Threshold rules: when balance exceeds X, encash up to Y days.",
+      "modules": [
+        "Leave Configuration",
+        "Accrual & Year End"
+      ],
+      "ownerModule": "Leave Configuration",
+      "status": "active",
+      "category": "model",
+      "isolated": false,
+      "externalRefs": [],
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_leaveencashmentthreshold"
+      ]
+    },
+    {
+      "id": "public.leave_leaveplan",
+      "name": "leave_leaveplan",
+      "description": "Named leave policy per tenant; employees are assigned to one plan and each plan holds one configuration per leave type.",
+      "modules": [
+        "Leave Configuration",
+        "Leave Requests & Balances",
+        "Accrual & Year End",
+        "Employees & Roles",
+        "Platform & Shared Infrastructure"
+      ],
+      "ownerModule": "Leave Configuration",
+      "status": "active",
+      "category": "model",
+      "isolated": false,
+      "externalRefs": [
+        {
+          "target": "auth-service tenant",
+          "columns": "tenant_id",
+          "cardinality": "N:1",
+          "enforcement": "Logical only (no FK): leave/views/leave_plan_type_config_view.py:56"
+        }
+      ],
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_leaveplan"
+      ]
+    },
+    {
+      "id": "public.leave_leaveplanleavetypeconfig",
+      "name": "leave_leaveplanleavetypeconfig",
+      "description": "Hub row for one leave type inside one leave plan. Holds forward OneToOne/FK pointers to each config panel (accrual, application rules, approvals, sandwich, encashment, carry-forward, probation, notice period).",
+      "modules": [
+        "Leave Configuration",
+        "Leave Requests & Balances",
+        "Accrual & Year End",
+        "Employees & Roles",
+        "Platform & Shared Infrastructure"
+      ],
+      "ownerModule": "Leave Configuration",
+      "status": "active",
+      "category": "model",
+      "isolated": false,
+      "externalRefs": [
+        {
+          "target": "auth-service tenant",
+          "columns": "tenant_id",
+          "cardinality": "N:1",
+          "enforcement": "Logical only (no FK): leave/views/leave_plan_type_config_view.py:56"
+        }
+      ],
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_leaveplanleavetypeconfig"
+      ]
+    },
+    {
+      "id": "public.leave_leavepriornoticerule",
+      "name": "leave_leavepriornoticerule",
+      "description": "Prior-notice rule rows: requests of at least N days need M calendar days notice and K working days.",
+      "modules": [
+        "Leave Configuration",
+        "Leave Requests & Balances"
+      ],
+      "ownerModule": "Leave Configuration",
+      "status": "active",
+      "category": "model",
+      "isolated": false,
+      "externalRefs": [],
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_leavepriornoticerule"
+      ]
+    },
+    {
+      "id": "public.leave_leavequota",
+      "name": "leave_leavequota",
+      "description": "Original per-leave-type quota and carry-forward settings by employee type. Superseded in practice by the per-plan accrual and year-end config tables.",
+      "modules": [
+        "Leave Requests & Balances",
+        "Platform & Shared Infrastructure"
+      ],
+      "ownerModule": "Leave Requests & Balances",
+      "status": "legacy",
+      "category": "model",
+      "isolated": false,
+      "externalRefs": [],
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_leavequota"
+      ]
+    },
+    {
+      "id": "public.leave_leavesandwichpolicyconfig",
+      "name": "leave_leavesandwichpolicyconfig",
+      "description": "Sandwich policy: whether weekly offs/holidays adjacent to or between leave days are counted as leave, and clubbing across leave types.",
+      "modules": [
+        "Leave Configuration",
+        "Leave Requests & Balances"
+      ],
+      "ownerModule": "Leave Configuration",
+      "status": "active",
+      "category": "model",
+      "isolated": false,
+      "externalRefs": [],
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_leavesandwichpolicyconfig"
+      ]
+    },
+    {
+      "id": "public.leave_leavetype",
+      "name": "leave_leavetype",
+      "description": "Tenant catalogue of leave types (code, name, category, eligibility restrictions, colour). Every plan configuration, balance, log, comp-off request and year-end transaction hangs off a row here.",
+      "modules": [
+        "Leave Configuration",
+        "Leave Requests & Balances",
+        "Accrual & Year End",
+        "Employees & Roles",
+        "Platform & Shared Infrastructure"
+      ],
+      "ownerModule": "Leave Configuration",
+      "status": "active",
+      "category": "model",
+      "isolated": false,
+      "externalRefs": [
+        {
+          "target": "auth-service tenant",
+          "columns": "tenant_id",
+          "cardinality": "N:1",
+          "enforcement": "Logical only (no FK): leave/serializers/leave_balance_serializers.py:31"
+        }
+      ],
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_leavetype"
+      ]
+    },
+    {
+      "id": "public.leave_leavetypeyearendtransaction",
+      "name": "leave_leavetypeyearendtransaction",
+      "description": "Per employee and leave type year-end figures: balance, carry forward, encashable, expired, quota, negative-balance treatment, carry target type.",
+      "modules": [
+        "Accrual & Year End",
+        "Platform & Shared Infrastructure"
+      ],
+      "ownerModule": "Accrual & Year End",
+      "status": "active",
+      "category": "model",
+      "isolated": false,
+      "externalRefs": [],
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_leavetypeyearendtransaction"
+      ]
+    },
+    {
+      "id": "public.leave_leaveusagecountrule",
+      "name": "leave_leaveusagecountrule",
+      "description": "\"How many times this leave can be taken\" rules (N times per month/year/tenure).",
+      "modules": [
+        "Leave Configuration",
+        "Leave Requests & Balances"
+      ],
+      "ownerModule": "Leave Configuration",
+      "status": "active",
+      "category": "model",
+      "isolated": false,
+      "externalRefs": [],
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_leaveusagecountrule"
+      ]
+    },
+    {
+      "id": "public.leave_leaveusagelimitconfig",
+      "name": "leave_leaveusagelimitconfig",
+      "description": "\"Leave usage limits\" panel: max consecutive days, monthly cap, allowed request date range, minimum gap, instance limits.",
+      "modules": [
+        "Leave Configuration",
+        "Leave Requests & Balances"
+      ],
+      "ownerModule": "Leave Configuration",
+      "status": "active",
+      "category": "model",
+      "isolated": false,
+      "externalRefs": [],
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_leaveusagelimitconfig"
+      ]
+    },
+    {
+      "id": "public.leave_noticeperiodaccrualslab",
+      "name": "leave_noticeperiodaccrualslab",
+      "description": "Days granted depending on which day of the month the exit date falls (strategy range).",
+      "modules": [
+        "Leave Configuration",
+        "Accrual & Year End"
+      ],
+      "ownerModule": "Leave Configuration",
+      "status": "active",
+      "category": "model",
+      "isolated": false,
+      "externalRefs": [],
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_noticeperiodaccrualslab"
+      ]
+    },
+    {
+      "id": "public.leave_noticeperiodleaveconfig",
+      "name": "leave_noticeperiodleaveconfig",
+      "description": "Notice-period rules: accrual proration strategy on exit, notice extension per leave, encashment block, whether leave is allowed during notice.",
+      "modules": [
+        "Leave Configuration",
+        "Leave Requests & Balances",
+        "Accrual & Year End"
+      ],
+      "ownerModule": "Leave Configuration",
+      "status": "active",
+      "category": "model",
+      "isolated": false,
+      "externalRefs": [],
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_noticeperiodleaveconfig"
+      ]
+    },
+    {
+      "id": "public.leave_probationaccrualslab",
+      "name": "leave_probationaccrualslab",
+      "description": "Slabs granting days depending on which day of the month probation ends.",
+      "modules": [
+        "Leave Configuration",
+        "Accrual & Year End"
+      ],
+      "ownerModule": "Leave Configuration",
+      "status": "active",
+      "category": "model",
+      "isolated": false,
+      "externalRefs": [],
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_probationaccrualslab"
+      ]
+    },
+    {
+      "id": "public.leave_probationfirstmonthslab",
+      "name": "leave_probationfirstmonthslab",
+      "description": "First-month proration slabs by joining-day range.",
+      "modules": [
+        "Leave Configuration",
+        "Accrual & Year End"
+      ],
+      "ownerModule": "Leave Configuration",
+      "status": "active",
+      "category": "model",
+      "isolated": false,
+      "externalRefs": [],
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_probationfirstmonthslab"
+      ]
+    },
+    {
+      "id": "public.leave_probationleaveconfig",
+      "name": "leave_probationleaveconfig",
+      "description": "Probation rules for a plan/type config: first-month proration, accrual during probation, application waiting period, cap during probation, encashment block, carry-over at probation end.",
+      "modules": [
+        "Leave Configuration",
+        "Leave Requests & Balances",
+        "Accrual & Year End"
+      ],
+      "ownerModule": "Leave Configuration",
+      "status": "active",
+      "category": "model",
+      "isolated": false,
+      "externalRefs": [],
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_probationleaveconfig"
+      ]
+    },
+    {
+      "id": "public.leave_request_action_log",
+      "name": "leave_request_action_log",
+      "description": "Append-only audit trail of state-changing actions on a leave request (approve, reject, undo, partial_cancel) with from/to status, actor and role, and for undo the original action and actor.",
+      "modules": [
+        "Leave Requests & Balances",
+        "Platform & Shared Infrastructure"
+      ],
+      "ownerModule": "Leave Requests & Balances",
+      "status": "active",
+      "category": "model",
+      "isolated": false,
+      "externalRefs": [
+        {
+          "target": "auth-service tenant",
+          "columns": "tenant_id",
+          "cardinality": "N:1",
+          "enforcement": "Logical only (no FK): leave/services/leave_action_log.py:26"
+        }
+      ],
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_request_action_log"
+      ]
+    },
+    {
+      "id": "public.leave_yearendprocessing",
+      "name": "leave_yearendprocessing",
+      "description": "One year-end processing run per leave plan and year: status, step, dates, employee count, initiator.",
+      "modules": [
+        "Accrual & Year End",
+        "Leave Configuration",
+        "Platform & Shared Infrastructure"
+      ],
+      "ownerModule": "Accrual & Year End",
+      "status": "active",
+      "category": "model",
+      "isolated": false,
+      "externalRefs": [],
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_yearendprocessing"
+      ]
+    },
+    {
+      "id": "public.tenant_leave_cycle",
+      "name": "tenant_leave_cycle",
+      "description": "One row per tenant defining the leave year (start and end month).",
+      "modules": [
+        "Leave Configuration",
+        "Leave Requests & Balances",
+        "Accrual & Year End"
+      ],
+      "ownerModule": "Leave Configuration",
+      "status": "active",
+      "category": "model",
+      "isolated": true,
+      "externalRefs": [
+        {
+          "target": "auth-service tenant",
+          "columns": "tenant_id",
+          "cardinality": "1:1",
+          "enforcement": "Logical only (no FK): leave/views/tenant_leave_cycle.py:59 (URL tenant)"
+        }
+      ],
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-tenant_leave_cycle"
+      ]
+    },
+    {
+      "id": "public.tenant_settings",
+      "name": "tenant_settings",
+      "description": "Per-tenant feature switches formerly held in environment variables; currently only external_leave_sync_enabled.",
+      "modules": [
+        "Platform & Shared Infrastructure",
+        "Leave Requests & Balances"
+      ],
+      "ownerModule": "Platform & Shared Infrastructure",
+      "status": "active",
+      "category": "model",
+      "isolated": true,
+      "externalRefs": [
+        {
+          "target": "auth-service tenant",
+          "columns": "tenant_id",
+          "cardinality": "1:1",
+          "enforcement": "Logical only (no FK): leave/utils/external_services.py:23"
+        }
+      ],
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-tenant_settings"
+      ]
+    },
+    {
+      "id": "public.wfh_admin_setting",
+      "name": "wfh_admin_setting",
+      "description": "A WFH policy per tenant: application rules (reason, half-day, future dates, admin-level monthly caps, prior notice, same-day cutoff) and archive flag.",
+      "modules": [
+        "WFH",
+        "Employees & Roles",
+        "Platform & Shared Infrastructure"
+      ],
+      "ownerModule": "WFH",
+      "status": "active",
+      "category": "model",
+      "isolated": false,
+      "externalRefs": [
+        {
+          "target": "auth-service tenant",
+          "columns": "tenant_id",
+          "cardinality": "N:1",
+          "enforcement": "Logical only (no FK): attendance/tasks.py:755-762"
+        }
+      ],
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-wfh_admin_setting"
+      ]
+    },
+    {
+      "id": "public.wfh_admin_setting_type_config",
+      "name": "wfh_admin_setting_type_config",
+      "description": "Which WFH types a WFH admin setting (policy) offers; detaching sets is_active False instead of deleting.",
+      "modules": [
+        "WFH"
+      ],
+      "ownerModule": "WFH",
+      "status": "active",
+      "category": "model",
+      "isolated": false,
+      "externalRefs": [
+        {
+          "target": "auth-service tenant",
+          "columns": "tenant_id",
+          "cardinality": "N:1",
+          "enforcement": "Logical only (no FK): attendance/views/wfh/types.py:511"
+        }
+      ],
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-wfh_admin_setting_type_config"
+      ]
+    },
+    {
+      "id": "public.wfh_balance",
+      "name": "wfh_balance",
+      "description": "Current WFH allowance per employee per policy (allocated, used, remaining, unlimited flag); one active row expected per (employee, policy).",
+      "modules": [
+        "WFH",
+        "Platform & Shared Infrastructure"
+      ],
+      "ownerModule": "WFH",
+      "status": "active",
+      "category": "model",
+      "isolated": false,
+      "externalRefs": [
+        {
+          "target": "auth-service tenant",
+          "columns": "tenant_id",
+          "cardinality": "N:1",
+          "enforcement": "Logical only (no FK): attendance/services/wfh_accrual_engine.py:131 (copied from employee.tenant_id)"
+        }
+      ],
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-wfh_balance"
+      ]
+    },
+    {
+      "id": "public.wfh_balance_accrual_history",
+      "name": "wfh_balance_accrual_history",
+      "description": "Append-only log of WFH balance changes (accrual runs, initial grant, accrual-setting changes, admin manual edits) with old/new values and the period end the balance is valid until.",
+      "modules": [
+        "WFH"
+      ],
+      "ownerModule": "WFH",
+      "status": "active",
+      "category": "model",
+      "isolated": false,
+      "externalRefs": [
+        {
+          "target": "auth-service tenant",
+          "columns": "tenant_id",
+          "cardinality": "N:1",
+          "enforcement": "Logical only (no FK): attendance/services/wfh_accrual_engine.py:180"
+        }
+      ],
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-wfh_balance_accrual_history"
+      ]
+    },
+    {
+      "id": "public.wfh_request",
+      "name": "wfh_request",
+      "description": "One row per WFH request (or per piece of a request split by partial cancel): dates, half-day session, WFH type, approval workflow state, approver/rejecter/canceller, watchers and escalation progress.",
+      "modules": [
+        "WFH",
+        "Clock-in & Time Entries",
+        "Reports & Reconciliation",
+        "Platform & Shared Infrastructure"
+      ],
+      "ownerModule": "WFH",
+      "status": "active",
+      "category": "model",
+      "isolated": false,
+      "externalRefs": [
+        {
+          "target": "auth-service tenant",
+          "columns": "tenant_id",
+          "cardinality": "N:1",
+          "enforcement": "Logical only (no FK): attendance/tasks.py:731-741"
+        }
+      ],
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-wfh_request"
+      ]
+    },
+    {
+      "id": "public.wfh_request_attachments",
+      "name": "wfh_request_attachments",
+      "description": "Links WFH requests to uploaded proof files stored in leave_file.",
+      "modules": [
+        "WFH"
+      ],
+      "ownerModule": "WFH",
+      "status": "active",
+      "category": "auto m2m",
+      "isolated": false,
+      "externalRefs": [],
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-wfh_request_attachments"
+      ]
+    },
+    {
+      "id": "public.wfh_type",
+      "name": "wfh_type",
+      "description": "Per-tenant catalogue of WFH kinds (REGULAR, MENSTRUAL) and their rules: balance deduction, per-type monthly caps, half-day override, auto-approval, gender restriction.",
+      "modules": [
+        "WFH"
+      ],
+      "ownerModule": "WFH",
+      "status": "active",
+      "category": "model",
+      "isolated": false,
+      "externalRefs": [
+        {
+          "target": "auth-service tenant",
+          "columns": "tenant_id",
+          "cardinality": "N:1",
+          "enforcement": "Logical only (no FK): attendance/views/wfh/types.py:147-149 (tenant-scoped queryset)"
+        }
+      ],
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-wfh_type"
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "id": "fk_attendance_timeentry_location_address_id",
+      "source": "public.attendance_locationaddress",
+      "target": "public.attendance_timeentry",
+      "cardinality": "1:1",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "location_address_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-attendance_timeentry"
+      ],
+      "docCardinality": "0..1:1",
+      "enforcement": "DB FK (on_delete=CASCADE), UNIQUE"
+    },
+    {
+      "id": "fk_attendance_timeentry_adjusted_by_id",
+      "source": "public.account_employee",
+      "target": "public.attendance_timeentry",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "employee_id",
+      "targetColumn": "adjusted_by_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "SET_NULL",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-attendance_timeentry"
+      ],
+      "docCardinality": "N:1",
+      "enforcement": "DB FK (on_delete=SET_NULL)"
+    },
+    {
+      "id": "fk_attendance_attendance_employee_id",
+      "source": "public.account_employee",
+      "target": "public.attendance_attendance",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "employee_id",
+      "targetColumn": "employee_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-attendance_attendance"
+      ],
+      "docCardinality": "N:1",
+      "enforcement": "DB FK (on_delete=CASCADE)"
+    },
+    {
+      "id": "attendance_employee_tenant_fk",
+      "source": "public.account_employee",
+      "target": "public.attendance_attendance",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "(tenant_id, employee_id)",
+      "targetColumn": "(tenant_id, employee_id)",
+      "enforced": true,
+      "constraintName": "attendance_employee_tenant_fk",
+      "onDelete": "NO ACTION",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-attendance_attendance"
+      ],
+      "docCardinality": "N:1",
+      "enforcement": "DB FK via RunSQL attendance_employee_tenant_fk, DEFERRABLE INITIALLY DEFERRED, no ON DELETE action (attendance/migrations/0035_attendance_tenant_consistency.py:33-47)"
+    },
+    {
+      "id": "fk_attendance_attendance_time_entries_attendance_id",
+      "source": "public.attendance_attendance",
+      "target": "public.attendance_attendance_time_entries",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "attendance_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-attendance_attendance_time_entries"
+      ],
+      "docCardinality": "N:1",
+      "enforcement": "DB FK (on_delete=CASCADE)"
+    },
+    {
+      "id": "fk_attendance_attendance_time_entries_timeentry_id",
+      "source": "public.attendance_timeentry",
+      "target": "public.attendance_attendance_time_entries",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "timeentry_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-attendance_attendance_time_entries"
+      ],
+      "docCardinality": "N:1",
+      "enforcement": "DB FK (on_delete=CASCADE)"
+    },
+    {
+      "id": "fk_attendance_attendance_adjusted_time_entries_attendance_id",
+      "source": "public.attendance_attendance",
+      "target": "public.attendance_attendance_adjusted_time_entries",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "attendance_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-attendance_attendance_adjusted_time_entries"
+      ],
+      "docCardinality": "N:1",
+      "enforcement": "DB FK (on_delete=CASCADE)"
+    },
+    {
+      "id": "fk_attendance_attendance_adjusted_time_entries_timeentry_id",
+      "source": "public.attendance_timeentry",
+      "target": "public.attendance_attendance_adjusted_time_entries",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "timeentry_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-attendance_attendance_adjusted_time_entries"
+      ],
+      "docCardinality": "N:1",
+      "enforcement": "DB FK (on_delete=CASCADE)"
+    },
+    {
+      "id": "fk_attendance_timeentryadjustmentlog_employee_id",
+      "source": "public.account_employee",
+      "target": "public.attendance_timeentryadjustmentlog",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "employee_id",
+      "targetColumn": "employee_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-attendance_timeentryadjustmentlog"
+      ],
+      "docCardinality": "N:1",
+      "enforcement": "DB FK (on_delete=CASCADE)"
+    },
+    {
+      "id": "attendance_adjustment_employee_tenant_fk",
+      "source": "public.account_employee",
+      "target": "public.attendance_timeentryadjustmentlog",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "(tenant_id, employee_id)",
+      "targetColumn": "(tenant_id, employee_id)",
+      "enforced": true,
+      "constraintName": "attendance_adjustment_employee_tenant_fk",
+      "onDelete": "NO ACTION",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-attendance_timeentryadjustmentlog"
+      ],
+      "docCardinality": "N:1",
+      "enforcement": "DB FK via RunSQL attendance_adjustment_employee_tenant_fk, DEFERRABLE INITIALLY DEFERRED, no ON DELETE action (attendance/migrations/0035_attendance_tenant_consistency.py:33-47)"
+    },
+    {
+      "id": "fk_attendance_timeentryadjustmentlog_approved_by_id",
+      "source": "public.account_employee",
+      "target": "public.attendance_timeentryadjustmentlog",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "employee_id",
+      "targetColumn": "approved_by_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "SET_NULL",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-attendance_timeentryadjustmentlog"
+      ],
+      "docCardinality": "N:1",
+      "enforcement": "DB FK (on_delete=SET_NULL)"
+    },
+    {
+      "id": "fk_attendance_timeentryadjustmentlog_rejected_by_id",
+      "source": "public.account_employee",
+      "target": "public.attendance_timeentryadjustmentlog",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "employee_id",
+      "targetColumn": "rejected_by_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "SET_NULL",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-attendance_timeentryadjustmentlog"
+      ],
+      "docCardinality": "N:1",
+      "enforcement": "DB FK (on_delete=SET_NULL)"
+    },
+    {
+      "id": "fk_attendance_timeentryadjustmentlog_cancelled_by_id",
+      "source": "public.account_employee",
+      "target": "public.attendance_timeentryadjustmentlog",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "employee_id",
+      "targetColumn": "cancelled_by_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "SET_NULL",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-attendance_timeentryadjustmentlog"
+      ],
+      "docCardinality": "N:1",
+      "enforcement": "DB FK (on_delete=SET_NULL)"
+    },
+    {
+      "id": "logical_attendance_timeentryadjustmentlog_employee_id_date",
+      "source": "public.attendance_attendance",
+      "target": "public.attendance_timeentryadjustmentlog",
+      "cardinality": "1:n",
+      "kind": "logical_relationship",
+      "sourceColumn": null,
+      "targetColumn": "(employee_id, date)",
+      "enforced": false,
+      "constraintName": null,
+      "onDelete": null,
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-attendance_timeentryadjustmentlog"
+      ],
+      "docCardinality": "N:1 (not unique)",
+      "enforcement": "Logical only (no FK): attendance/helpers/attendance_adjustment.py:11, attendance/serializers/attendance.py:396-398, :291-300"
+    },
+    {
+      "id": "logical_attendance_timeentryadjustmentlog_tenant_id",
+      "source": "public.attendance_adjustment_approval_config",
+      "target": "public.attendance_timeentryadjustmentlog",
+      "cardinality": "1:n",
+      "kind": "logical_relationship",
+      "sourceColumn": "tenant_id",
+      "targetColumn": "tenant_id",
+      "enforced": false,
+      "constraintName": null,
+      "onDelete": null,
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-attendance_timeentryadjustmentlog"
+      ],
+      "docCardinality": "N:0..1",
+      "enforcement": "Logical only (no FK): attendance/views/time_entries.py:320, attendance/tasks.py:983-985"
+    },
+    {
+      "id": "logical_attendance_timeentryadjustmentlog_notified_approval_level",
+      "source": "public.attendance_adjustment_approval_level",
+      "target": "public.attendance_timeentryadjustmentlog",
+      "cardinality": "1:n",
+      "kind": "logical_relationship",
+      "sourceColumn": "level (within tenant's config)",
+      "targetColumn": "notified_approval_level",
+      "enforced": false,
+      "constraintName": null,
+      "onDelete": null,
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-attendance_timeentryadjustmentlog"
+      ],
+      "docCardinality": "N:0..1",
+      "enforcement": "Logical only (no FK): attendance/views/time_entries.py:361-362, attendance/tasks.py:1006-1034"
+    },
+    {
+      "id": "fk_attendance_adjustment_approval_level_approval_config_id",
+      "source": "public.attendance_adjustment_approval_config",
+      "target": "public.attendance_adjustment_approval_level",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "approval_config_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-attendance_adjustment_approval_level"
+      ],
+      "docCardinality": "N:1",
+      "enforcement": "DB FK (on_delete=CASCADE)"
+    },
+    {
+      "id": "fk_attendance_adjustment_approval_assignee_approval_level_id",
+      "source": "public.attendance_adjustment_approval_level",
+      "target": "public.attendance_adjustment_approval_assignee",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "approval_level_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-attendance_adjustment_approval_assignee"
+      ],
+      "docCardinality": "N:1",
+      "enforcement": "DB FK (on_delete=CASCADE)"
+    },
+    {
+      "id": "fk_attendance_adjustment_approval_assignee_employee_id",
+      "source": "public.account_employee",
+      "target": "public.attendance_adjustment_approval_assignee",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "employee_id",
+      "targetColumn": "employee_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-attendance_adjustment_approval_assignee"
+      ],
+      "docCardinality": "N:0..1",
+      "enforcement": "DB FK (on_delete=CASCADE)"
+    },
+    {
+      "id": "fk_attendance_adjustment_approval_assignee_role_id",
+      "source": "public.account_role",
+      "target": "public.attendance_adjustment_approval_assignee",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "role_id",
+      "targetColumn": "role_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-attendance_adjustment_approval_assignee"
+      ],
+      "docCardinality": "N:0..1",
+      "enforcement": "DB FK (on_delete=CASCADE)"
+    },
+    {
+      "id": "fk_wfh_request_employee_id",
+      "source": "public.account_employee",
+      "target": "public.wfh_request",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "employee_id",
+      "targetColumn": "employee_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-wfh_request"
+      ],
+      "docCardinality": "N:1",
+      "enforcement": "DB FK (on_delete=CASCADE)"
+    },
+    {
+      "id": "fk_wfh_request_wfh_admin_setting_id",
+      "source": "public.wfh_admin_setting",
+      "target": "public.wfh_request",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "wfh_admin_setting_id",
+      "targetColumn": "wfh_admin_setting_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "DO_NOTHING",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-wfh_request"
+      ],
+      "docCardinality": "N:1",
+      "enforcement": "DB FK (on_delete=DO_NOTHING)"
+    },
+    {
+      "id": "fk_wfh_request_wfh_type_id",
+      "source": "public.wfh_type",
+      "target": "public.wfh_request",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "wfh_type_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "PROTECT",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-wfh_request"
+      ],
+      "docCardinality": "N:1",
+      "enforcement": "DB FK (on_delete=PROTECT)"
+    },
+    {
+      "id": "fk_wfh_request_approved_by_id",
+      "source": "public.account_employee",
+      "target": "public.wfh_request",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "employee_id",
+      "targetColumn": "approved_by_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "SET_NULL",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-wfh_request"
+      ],
+      "docCardinality": "N:1",
+      "enforcement": "DB FK (on_delete=SET_NULL)"
+    },
+    {
+      "id": "fk_wfh_request_rejected_by_id",
+      "source": "public.account_employee",
+      "target": "public.wfh_request",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "employee_id",
+      "targetColumn": "rejected_by_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "SET_NULL",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-wfh_request"
+      ],
+      "docCardinality": "N:1",
+      "enforcement": "DB FK (on_delete=SET_NULL)"
+    },
+    {
+      "id": "fk_wfh_request_cancelled_by_id",
+      "source": "public.account_employee",
+      "target": "public.wfh_request",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "employee_id",
+      "targetColumn": "cancelled_by_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "SET_NULL",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-wfh_request"
+      ],
+      "docCardinality": "N:1",
+      "enforcement": "DB FK (on_delete=SET_NULL)"
+    },
+    {
+      "id": "fk_wfh_request_split_from_id",
+      "source": "public.wfh_request",
+      "target": "public.wfh_request",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "wfh_request_id",
+      "targetColumn": "split_from_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-wfh_request"
+      ],
+      "docCardinality": "N:1",
+      "enforcement": "DB FK (on_delete=CASCADE)"
+    },
+    {
+      "id": "logical_wfh_request_people_to_notify",
+      "source": "public.account_employee",
+      "target": "public.wfh_request",
+      "cardinality": "m:n",
+      "kind": "logical_relationship",
+      "sourceColumn": "team_member_id",
+      "targetColumn": "people_to_notify[]",
+      "enforced": false,
+      "constraintName": null,
+      "onDelete": null,
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-wfh_request"
+      ],
+      "docCardinality": "N:M",
+      "enforcement": "Logical only (no FK): attendance/tasks.py:361-364"
+    },
+    {
+      "id": "logical_wfh_request_notified_approval_level",
+      "source": "public.attendance_wfhapprovallevel",
+      "target": "public.wfh_request",
+      "cardinality": "1:n",
+      "kind": "logical_relationship",
+      "sourceColumn": "level",
+      "targetColumn": "notified_approval_level",
+      "enforced": false,
+      "constraintName": null,
+      "onDelete": null,
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-wfh_request"
+      ],
+      "docCardinality": "N:1",
+      "enforcement": "Logical only (no FK): attendance/tasks.py:667,697"
+    },
+    {
+      "id": "fk_wfh_request_attachments_wfhrequestlog_id",
+      "source": "public.wfh_request",
+      "target": "public.wfh_request_attachments",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "wfh_request_id",
+      "targetColumn": "wfhrequestlog_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-wfh_request_attachments"
+      ],
+      "docCardinality": "N:1",
+      "enforcement": "DB FK (on_delete=CASCADE)"
+    },
+    {
+      "id": "fk_wfh_request_attachments_file_id",
+      "source": "public.leave_file",
+      "target": "public.wfh_request_attachments",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "file_id",
+      "targetColumn": "file_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-wfh_request_attachments"
+      ],
+      "docCardinality": "N:1",
+      "enforcement": "DB FK (on_delete=CASCADE)"
+    },
+    {
+      "id": "fk_wfh_admin_setting_type_config_wfh_admin_setting_id",
+      "source": "public.wfh_admin_setting",
+      "target": "public.wfh_admin_setting_type_config",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "wfh_admin_setting_id",
+      "targetColumn": "wfh_admin_setting_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-wfh_admin_setting_type_config"
+      ],
+      "docCardinality": "N:1",
+      "enforcement": "DB FK (on_delete=CASCADE)"
+    },
+    {
+      "id": "fk_wfh_admin_setting_type_config_wfh_type_id",
+      "source": "public.wfh_type",
+      "target": "public.wfh_admin_setting_type_config",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "wfh_type_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-wfh_admin_setting_type_config"
+      ],
+      "docCardinality": "N:1",
+      "enforcement": "DB FK (on_delete=CASCADE)"
+    },
+    {
+      "id": "fk_employee_wfh_type_override_employee_id",
+      "source": "public.account_employee",
+      "target": "public.employee_wfh_type_override",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "employee_id",
+      "targetColumn": "employee_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-employee_wfh_type_override"
+      ],
+      "docCardinality": "N:1",
+      "enforcement": "DB FK (on_delete=CASCADE)"
+    },
+    {
+      "id": "fk_employee_wfh_type_override_wfh_type_id",
+      "source": "public.wfh_type",
+      "target": "public.employee_wfh_type_override",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "wfh_type_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-employee_wfh_type_override"
+      ],
+      "docCardinality": "N:1",
+      "enforcement": "DB FK (on_delete=CASCADE)"
+    },
+    {
+      "id": "logical_employee_wfh_type_override_updated_by",
+      "source": "public.account_employee",
+      "target": "public.employee_wfh_type_override",
+      "cardinality": "1:n",
+      "kind": "logical_relationship",
+      "sourceColumn": "employee_id",
+      "targetColumn": "updated_by",
+      "enforced": false,
+      "constraintName": null,
+      "onDelete": null,
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-employee_wfh_type_override"
+      ],
+      "docCardinality": "N:1",
+      "enforcement": "Logical only (no FK): attendance/views/wfh/types.py:612,668"
+    },
+    {
+      "id": "fk_attendance_wfhpriornoticesetting_wfh_admin_setting_id",
+      "source": "public.wfh_admin_setting",
+      "target": "public.attendance_wfhpriornoticesetting",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "wfh_admin_setting_id",
+      "targetColumn": "wfh_admin_setting_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-attendance_wfhpriornoticesetting"
+      ],
+      "docCardinality": "N:1",
+      "enforcement": "DB FK (on_delete=CASCADE)"
+    },
+    {
+      "id": "fk_attendance_wfhaccrualsetting_wfh_admin_setting_id",
+      "source": "public.wfh_admin_setting",
+      "target": "public.attendance_wfhaccrualsetting",
+      "cardinality": "1:1",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "wfh_admin_setting_id",
+      "targetColumn": "wfh_admin_setting_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-attendance_wfhaccrualsetting"
+      ],
+      "docCardinality": "1:1",
+      "enforcement": "DB FK (on_delete=CASCADE), UNIQUE"
+    },
+    {
+      "id": "fk_attendance_wfhapprovalconfig_wfh_admin_setting_id",
+      "source": "public.wfh_admin_setting",
+      "target": "public.attendance_wfhapprovalconfig",
+      "cardinality": "1:1",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "wfh_admin_setting_id",
+      "targetColumn": "wfh_admin_setting_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-attendance_wfhapprovalconfig"
+      ],
+      "docCardinality": "1:1",
+      "enforcement": "DB FK (on_delete=CASCADE), UNIQUE"
+    },
+    {
+      "id": "fk_attendance_wfhapprovallevel_wfh_approval_config_id",
+      "source": "public.attendance_wfhapprovalconfig",
+      "target": "public.attendance_wfhapprovallevel",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "wfh_approval_config_id",
+      "targetColumn": "wfh_approval_config_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-attendance_wfhapprovallevel"
+      ],
+      "docCardinality": "N:1",
+      "enforcement": "DB FK (on_delete=CASCADE)"
+    },
+    {
+      "id": "fk_attendance_wfhapprovalassignee_approval_level_id",
+      "source": "public.attendance_wfhapprovallevel",
+      "target": "public.attendance_wfhapprovalassignee",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "approval_level_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-attendance_wfhapprovalassignee"
+      ],
+      "docCardinality": "N:1",
+      "enforcement": "DB FK (on_delete=CASCADE)"
+    },
+    {
+      "id": "fk_attendance_wfhapprovalassignee_employee_id",
+      "source": "public.account_employee",
+      "target": "public.attendance_wfhapprovalassignee",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "employee_id",
+      "targetColumn": "employee_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-attendance_wfhapprovalassignee"
+      ],
+      "docCardinality": "N:1",
+      "enforcement": "DB FK (on_delete=CASCADE)"
+    },
+    {
+      "id": "fk_attendance_wfhapprovalassignee_role_id",
+      "source": "public.account_role",
+      "target": "public.attendance_wfhapprovalassignee",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "role_id",
+      "targetColumn": "role_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-attendance_wfhapprovalassignee"
+      ],
+      "docCardinality": "N:1",
+      "enforcement": "DB FK (on_delete=CASCADE)"
+    },
+    {
+      "id": "fk_attendance_wfhautoapprovenotifyassignee_approval_config_id",
+      "source": "public.attendance_wfhapprovalconfig",
+      "target": "public.attendance_wfhautoapprovenotifyassignee",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "wfh_approval_config_id",
+      "targetColumn": "approval_config_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-attendance_wfhautoapprovenotifyassignee"
+      ],
+      "docCardinality": "N:1",
+      "enforcement": "DB FK (on_delete=CASCADE)"
+    },
+    {
+      "id": "fk_attendance_wfhautoapprovenotifyassignee_employee_id",
+      "source": "public.account_employee",
+      "target": "public.attendance_wfhautoapprovenotifyassignee",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "employee_id",
+      "targetColumn": "employee_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-attendance_wfhautoapprovenotifyassignee"
+      ],
+      "docCardinality": "N:1",
+      "enforcement": "DB FK (on_delete=CASCADE)"
+    },
+    {
+      "id": "fk_attendance_wfhautoapprovenotifyassignee_role_id",
+      "source": "public.account_role",
+      "target": "public.attendance_wfhautoapprovenotifyassignee",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "role_id",
+      "targetColumn": "role_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-attendance_wfhautoapprovenotifyassignee"
+      ],
+      "docCardinality": "N:1",
+      "enforcement": "DB FK (on_delete=CASCADE)"
+    },
+    {
+      "id": "fk_wfh_balance_wfh_admin_setting_id",
+      "source": "public.wfh_admin_setting",
+      "target": "public.wfh_balance",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "wfh_admin_setting_id",
+      "targetColumn": "wfh_admin_setting_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-wfh_balance"
+      ],
+      "docCardinality": "N:1",
+      "enforcement": "DB FK (on_delete=CASCADE)"
+    },
+    {
+      "id": "fk_wfh_balance_employee_id",
+      "source": "public.account_employee",
+      "target": "public.wfh_balance",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "employee_id",
+      "targetColumn": "employee_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-wfh_balance"
+      ],
+      "docCardinality": "N:1",
+      "enforcement": "DB FK (on_delete=CASCADE)"
+    },
+    {
+      "id": "fk_wfh_balance_accrual_history_wfh_balance_id",
+      "source": "public.wfh_balance",
+      "target": "public.wfh_balance_accrual_history",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "wfh_balance_id",
+      "targetColumn": "wfh_balance_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "DO_NOTHING",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-wfh_balance_accrual_history"
+      ],
+      "docCardinality": "N:1",
+      "enforcement": "DB FK (on_delete=DO_NOTHING)"
+    },
+    {
+      "id": "fk_leave_leaveplanleavetypeconfig_leave_plan_id",
+      "source": "public.leave_leaveplan",
+      "target": "public.leave_leaveplanleavetypeconfig",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "leave_plan_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_leaveplanleavetypeconfig"
+      ],
+      "docCardinality": "N:1",
+      "enforcement": "DB FK (on_delete=CASCADE)"
+    },
+    {
+      "id": "fk_leave_leaveplanleavetypeconfig_leave_type_id",
+      "source": "public.leave_leavetype",
+      "target": "public.leave_leaveplanleavetypeconfig",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "leave_type_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_leaveplanleavetypeconfig"
+      ],
+      "docCardinality": "N:1",
+      "enforcement": "DB FK (on_delete=CASCADE)"
+    },
+    {
+      "id": "fk_leave_leaveplanleavetypeconfig_leave_accrual_id",
+      "source": "public.leave_leaveaccrualconfig",
+      "target": "public.leave_leaveplanleavetypeconfig",
+      "cardinality": "1:1",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "leave_accrual_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_leaveplanleavetypeconfig"
+      ],
+      "docCardinality": "1:1",
+      "enforcement": "DB FK (on_delete=CASCADE)"
+    },
+    {
+      "id": "fk_leave_leaveplanleavetypeconfig_applying_leave_id",
+      "source": "public.leave_leaveapplicationconfig",
+      "target": "public.leave_leaveplanleavetypeconfig",
+      "cardinality": "1:1",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "applying_leave_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_leaveplanleavetypeconfig"
+      ],
+      "docCardinality": "1:1",
+      "enforcement": "DB FK (on_delete=CASCADE)"
+    },
+    {
+      "id": "fk_leave_leaveplanleavetypeconfig_leave_approval_id",
+      "source": "public.leave_leaveapprovalconfig",
+      "target": "public.leave_leaveplanleavetypeconfig",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "leave_approval_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "SET_NULL",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_leaveplanleavetypeconfig"
+      ],
+      "docCardinality": "N:1",
+      "enforcement": "DB FK (on_delete=SET_NULL)"
+    },
+    {
+      "id": "fk_leave_leaveplanleavetypeconfig_comp_off_approval_id",
+      "source": "public.leave_leaveapprovalconfig",
+      "target": "public.leave_leaveplanleavetypeconfig",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "comp_off_approval_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "SET_NULL",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_leaveplanleavetypeconfig"
+      ],
+      "docCardinality": "N:1",
+      "enforcement": "DB FK (on_delete=SET_NULL)"
+    },
+    {
+      "id": "fk_leave_leaveplanleavetypeconfig_intervening_holidays_id",
+      "source": "public.leave_leavesandwichpolicyconfig",
+      "target": "public.leave_leaveplanleavetypeconfig",
+      "cardinality": "1:1",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "intervening_holidays_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_leaveplanleavetypeconfig"
+      ],
+      "docCardinality": "1:1",
+      "enforcement": "DB FK (on_delete=CASCADE)"
+    },
+    {
+      "id": "fk_leave_leaveplanleavetypeconfig_year_end_processing_encashment_id",
+      "source": "public.leave_leaveencashmentconfig",
+      "target": "public.leave_leaveplanleavetypeconfig",
+      "cardinality": "1:1",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "year_end_processing_encashment_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_leaveplanleavetypeconfig"
+      ],
+      "docCardinality": "1:1",
+      "enforcement": "DB FK (on_delete=CASCADE)"
+    },
+    {
+      "id": "fk_leave_leaveplanleavetypeconfig_year_end_processing_carryforward_id",
+      "source": "public.leave_leavecarryforwardconfig",
+      "target": "public.leave_leaveplanleavetypeconfig",
+      "cardinality": "1:1",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "year_end_processing_carryforward_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_leaveplanleavetypeconfig"
+      ],
+      "docCardinality": "1:1",
+      "enforcement": "DB FK (on_delete=CASCADE)"
+    },
+    {
+      "id": "fk_leave_leaveplanleavetypeconfig_probation_config_id",
+      "source": "public.leave_probationleaveconfig",
+      "target": "public.leave_leaveplanleavetypeconfig",
+      "cardinality": "1:1",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "probation_config_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_leaveplanleavetypeconfig"
+      ],
+      "docCardinality": "1:1",
+      "enforcement": "DB FK (on_delete=CASCADE)"
+    },
+    {
+      "id": "fk_leave_leaveplanleavetypeconfig_notice_period_config_id",
+      "source": "public.leave_noticeperiodleaveconfig",
+      "target": "public.leave_leaveplanleavetypeconfig",
+      "cardinality": "1:1",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "notice_period_config_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_leaveplanleavetypeconfig"
+      ],
+      "docCardinality": "1:1",
+      "enforcement": "DB FK (on_delete=CASCADE)"
+    },
+    {
+      "id": "fk_leave_leaveaccrualconfig_leave_plan_config_id",
+      "source": "public.leave_leaveplanleavetypeconfig",
+      "target": "public.leave_leaveaccrualconfig",
+      "cardinality": "1:1",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "leave_plan_config_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_leaveaccrualconfig"
+      ],
+      "docCardinality": "1:1",
+      "enforcement": "DB FK (on_delete=CASCADE)"
+    },
+    {
+      "id": "fk_leave_leaveaccrualconfig_restricted_leave_types_leaveaccrualconfig_id",
+      "source": "public.leave_leaveaccrualconfig",
+      "target": "public.leave_leaveaccrualconfig_restricted_leave_types",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "leaveaccrualconfig_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_leaveaccrualconfig_restricted_leave_types"
+      ],
+      "docCardinality": "N:1",
+      "enforcement": "DB FK (on_delete=CASCADE)"
+    },
+    {
+      "id": "fk_leave_leaveaccrualconfig_restricted_leave_types_leavetype_id",
+      "source": "public.leave_leavetype",
+      "target": "public.leave_leaveaccrualconfig_restricted_leave_types",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "leavetype_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_leaveaccrualconfig_restricted_leave_types"
+      ],
+      "docCardinality": "N:1",
+      "enforcement": "DB FK (on_delete=CASCADE)"
+    },
+    {
+      "id": "fk_leave_accrualratebytenure_accrual_config_id",
+      "source": "public.leave_leaveaccrualconfig",
+      "target": "public.leave_accrualratebytenure",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "accrual_config_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_accrualratebytenure"
+      ],
+      "docCardinality": "N:1",
+      "enforcement": "DB FK (on_delete=CASCADE)"
+    },
+    {
+      "id": "fk_leave_leaveapplicationconfig_leave_plan_config_id",
+      "source": "public.leave_leaveplanleavetypeconfig",
+      "target": "public.leave_leaveapplicationconfig",
+      "cardinality": "1:1",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "leave_plan_config_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_leaveapplicationconfig"
+      ],
+      "docCardinality": "1:1",
+      "enforcement": "DB FK (on_delete=CASCADE)"
+    },
+    {
+      "id": "fk_leave_leavepriornoticerule_config_id",
+      "source": "public.leave_leaveapplicationconfig",
+      "target": "public.leave_leavepriornoticerule",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "config_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_leavepriornoticerule"
+      ],
+      "docCardinality": "N:1",
+      "enforcement": "DB FK (on_delete=CASCADE)"
+    },
+    {
+      "id": "fk_leave_leaveapplicationrestrictionconfig_config_id",
+      "source": "public.leave_leaveapplicationconfig",
+      "target": "public.leave_leaveapplicationrestrictionconfig",
+      "cardinality": "1:1",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "config_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_leaveapplicationrestrictionconfig"
+      ],
+      "docCardinality": "1:1",
+      "enforcement": "DB FK (on_delete=CASCADE)"
+    },
+    {
+      "id": "fk_leave_leaveapplicationrestrictionconfig_unavailable_types_leaveapplicationrestrictionconfig_id",
+      "source": "public.leave_leaveapplicationrestrictionconfig",
+      "target": "public.leave_leaveapplicationrestrictionconfig_unavailable_types",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "leaveapplicationrestrictionconfig_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_leaveapplicationrestrictionconfig_unavailable_types"
+      ],
+      "docCardinality": "N:1",
+      "enforcement": "DB FK (on_delete=CASCADE)"
+    },
+    {
+      "id": "fk_leave_leaveapplicationrestrictionconfig_unavailable_types_leavetype_id",
+      "source": "public.leave_leavetype",
+      "target": "public.leave_leaveapplicationrestrictionconfig_unavailable_types",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "leavetype_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_leaveapplicationrestrictionconfig_unavailable_types"
+      ],
+      "docCardinality": "N:1",
+      "enforcement": "DB FK (on_delete=CASCADE)"
+    },
+    {
+      "id": "fk_leave_leaveapplicationrestrictionconfig_cannot_be_availed_w3b41_leaveapplicationrestrictionconfig_id",
+      "source": "public.leave_leaveapplicationrestrictionconfig",
+      "target": "public.leave_leaveapplicationrestrictionconfig_cannot_be_availed_w3b41",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "leaveapplicationrestrictionconfig_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_leaveapplicationrestrictionconfig_cannot_be_availed_w3b41"
+      ],
+      "docCardinality": "N:1",
+      "enforcement": "DB FK (on_delete=CASCADE)"
+    },
+    {
+      "id": "fk_leave_leaveapplicationrestrictionconfig_cannot_be_availed_w3b41_leavetype_id",
+      "source": "public.leave_leavetype",
+      "target": "public.leave_leaveapplicationrestrictionconfig_cannot_be_availed_w3b41",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "leavetype_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_leaveapplicationrestrictionconfig_cannot_be_availed_w3b41"
+      ],
+      "docCardinality": "N:1",
+      "enforcement": "DB FK (on_delete=CASCADE)"
+    },
+    {
+      "id": "fk_leave_leaveusagelimitconfig_config_id",
+      "source": "public.leave_leaveapplicationconfig",
+      "target": "public.leave_leaveusagelimitconfig",
+      "cardinality": "1:1",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "config_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_leaveusagelimitconfig"
+      ],
+      "docCardinality": "1:1",
+      "enforcement": "DB FK (on_delete=CASCADE)"
+    },
+    {
+      "id": "fk_leave_leaveusagecountrule_config_id",
+      "source": "public.leave_leaveusagelimitconfig",
+      "target": "public.leave_leaveusagecountrule",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "config_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_leaveusagecountrule"
+      ],
+      "docCardinality": "N:1",
+      "enforcement": "DB FK (on_delete=CASCADE)"
+    },
+    {
+      "id": "fk_leave_leavesandwichpolicyconfig_config_id",
+      "source": "public.leave_leaveapplicationconfig",
+      "target": "public.leave_leavesandwichpolicyconfig",
+      "cardinality": "1:1",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "config_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_leavesandwichpolicyconfig"
+      ],
+      "docCardinality": "1:1",
+      "enforcement": "DB FK (on_delete=CASCADE)"
+    },
+    {
+      "id": "fk_leave_leaveapprovalconfig_leave_plan_config_id",
+      "source": "public.leave_leaveplanleavetypeconfig",
+      "target": "public.leave_leaveapprovalconfig",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "leave_plan_config_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_leaveapprovalconfig"
+      ],
+      "docCardinality": "N:1",
+      "enforcement": "DB FK (on_delete=CASCADE)"
+    },
+    {
+      "id": "fk_leave_approvallevel_leave_approval_config_id",
+      "source": "public.leave_leaveapprovalconfig",
+      "target": "public.leave_approvallevel",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "leave_approval_config_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_approvallevel"
+      ],
+      "docCardinality": "N:1",
+      "enforcement": "DB FK (on_delete=CASCADE)"
+    },
+    {
+      "id": "fk_leave_approvallevel_encashment_approval_config_id",
+      "source": "public.leave_leaveencashmentapprovalconfig",
+      "target": "public.leave_approvallevel",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "encashment_approval_config_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_approvallevel"
+      ],
+      "docCardinality": "N:1",
+      "enforcement": "DB FK (on_delete=CASCADE)"
+    },
+    {
+      "id": "fk_leave_approvalassignee_approval_level_id",
+      "source": "public.leave_approvallevel",
+      "target": "public.leave_approvalassignee",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "approval_level_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_approvalassignee"
+      ],
+      "docCardinality": "N:1",
+      "enforcement": "DB FK (on_delete=CASCADE)"
+    },
+    {
+      "id": "fk_leave_approvalassignee_role_id",
+      "source": "public.account_role",
+      "target": "public.leave_approvalassignee",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "role_id",
+      "targetColumn": "role_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_approvalassignee"
+      ],
+      "docCardinality": "N:1",
+      "enforcement": "DB FK (on_delete=CASCADE)"
+    },
+    {
+      "id": "fk_leave_approvalassignee_employee_id",
+      "source": "public.account_employee",
+      "target": "public.leave_approvalassignee",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "employee_id",
+      "targetColumn": "employee_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_approvalassignee"
+      ],
+      "docCardinality": "N:1",
+      "enforcement": "DB FK (on_delete=CASCADE)"
+    },
+    {
+      "id": "fk_leave_approvalassignee_reporting_manager_id",
+      "source": "public.account_employee",
+      "target": "public.leave_approvalassignee",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "employee_id",
+      "targetColumn": "reporting_manager_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_approvalassignee"
+      ],
+      "docCardinality": "N:1",
+      "enforcement": "DB FK (on_delete=CASCADE)"
+    },
+    {
+      "id": "fk_leave_autoapprovenotifyassignee_approval_config_id",
+      "source": "public.leave_leaveapprovalconfig",
+      "target": "public.leave_autoapprovenotifyassignee",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "approval_config_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_autoapprovenotifyassignee"
+      ],
+      "docCardinality": "N:1",
+      "enforcement": "DB FK (on_delete=CASCADE)"
+    },
+    {
+      "id": "fk_leave_autoapprovenotifyassignee_role_id",
+      "source": "public.account_role",
+      "target": "public.leave_autoapprovenotifyassignee",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "role_id",
+      "targetColumn": "role_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_autoapprovenotifyassignee"
+      ],
+      "docCardinality": "N:1",
+      "enforcement": "DB FK (on_delete=CASCADE)"
+    },
+    {
+      "id": "fk_leave_autoapprovenotifyassignee_employee_id",
+      "source": "public.account_employee",
+      "target": "public.leave_autoapprovenotifyassignee",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "employee_id",
+      "targetColumn": "employee_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_autoapprovenotifyassignee"
+      ],
+      "docCardinality": "N:1",
+      "enforcement": "DB FK (on_delete=CASCADE)"
+    },
+    {
+      "id": "fk_leave_probationleaveconfig_plan_leave_type_id",
+      "source": "public.leave_leaveplanleavetypeconfig",
+      "target": "public.leave_probationleaveconfig",
+      "cardinality": "1:1",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "plan_leave_type_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_probationleaveconfig"
+      ],
+      "docCardinality": "1:1",
+      "enforcement": "DB FK (on_delete=CASCADE)"
+    },
+    {
+      "id": "fk_leave_probationfirstmonthslab_probation_config_id",
+      "source": "public.leave_probationleaveconfig",
+      "target": "public.leave_probationfirstmonthslab",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "probation_config_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_probationfirstmonthslab"
+      ],
+      "docCardinality": "N:1",
+      "enforcement": "DB FK (on_delete=CASCADE)"
+    },
+    {
+      "id": "fk_leave_probationaccrualslab_probation_config_id",
+      "source": "public.leave_probationleaveconfig",
+      "target": "public.leave_probationaccrualslab",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "probation_config_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_probationaccrualslab"
+      ],
+      "docCardinality": "N:1",
+      "enforcement": "DB FK (on_delete=CASCADE)"
+    },
+    {
+      "id": "fk_leave_noticeperiodleaveconfig_plan_leave_type_id",
+      "source": "public.leave_leaveplanleavetypeconfig",
+      "target": "public.leave_noticeperiodleaveconfig",
+      "cardinality": "1:1",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "plan_leave_type_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_noticeperiodleaveconfig"
+      ],
+      "docCardinality": "1:1",
+      "enforcement": "DB FK (on_delete=CASCADE)"
+    },
+    {
+      "id": "fk_leave_noticeperiodaccrualslab_notice_config_id",
+      "source": "public.leave_noticeperiodleaveconfig",
+      "target": "public.leave_noticeperiodaccrualslab",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "notice_config_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_noticeperiodaccrualslab"
+      ],
+      "docCardinality": "N:1",
+      "enforcement": "DB FK (on_delete=CASCADE)"
+    },
+    {
+      "id": "fk_leave_leaveencashmentconfig_leave_plan_config_id",
+      "source": "public.leave_leaveplanleavetypeconfig",
+      "target": "public.leave_leaveencashmentconfig",
+      "cardinality": "1:1",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "leave_plan_config_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_leaveencashmentconfig"
+      ],
+      "docCardinality": "1:1",
+      "enforcement": "DB FK (on_delete=CASCADE)"
+    },
+    {
+      "id": "fk_leave_leaveencashmentthreshold_encashment_config_id",
+      "source": "public.leave_leaveencashmentconfig",
+      "target": "public.leave_leaveencashmentthreshold",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "encashment_config_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_leaveencashmentthreshold"
+      ],
+      "docCardinality": "N:1",
+      "enforcement": "DB FK (on_delete=CASCADE)"
+    },
+    {
+      "id": "fk_leave_leaveencashmentapprovalconfig_encashment_config_id",
+      "source": "public.leave_leaveencashmentconfig",
+      "target": "public.leave_leaveencashmentapprovalconfig",
+      "cardinality": "1:1",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "encashment_config_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_leaveencashmentapprovalconfig"
+      ],
+      "docCardinality": "1:1",
+      "enforcement": "DB FK (on_delete=CASCADE)"
+    },
+    {
+      "id": "fk_leave_leaveencashmentapprover_approval_level_id",
+      "source": "public.leave_approvallevel",
+      "target": "public.leave_leaveencashmentapprover",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "approval_level_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_leaveencashmentapprover"
+      ],
+      "docCardinality": "N:1",
+      "enforcement": "DB FK (on_delete=CASCADE)"
+    },
+    {
+      "id": "logical_leave_leaveencashmentapprover_role_id",
+      "source": "public.account_role",
+      "target": "public.leave_leaveencashmentapprover",
+      "cardinality": "1:n",
+      "kind": "logical_relationship",
+      "sourceColumn": null,
+      "targetColumn": "role_id",
+      "enforced": false,
+      "constraintName": null,
+      "onDelete": null,
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_leaveencashmentapprover"
+      ],
+      "docCardinality": "N:1",
+      "enforcement": "Logical only (no FK): leave/models/leave_year_end_processing_config.py:106 (naming only, no resolving code)"
+    },
+    {
+      "id": "logical_leave_leaveencashmentapprover_employee_id",
+      "source": "public.account_employee",
+      "target": "public.leave_leaveencashmentapprover",
+      "cardinality": "1:n",
+      "kind": "logical_relationship",
+      "sourceColumn": null,
+      "targetColumn": "employee_id",
+      "enforced": false,
+      "constraintName": null,
+      "onDelete": null,
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_leaveencashmentapprover"
+      ],
+      "docCardinality": "N:1",
+      "enforcement": "Logical only (no FK): leave/models/leave_year_end_processing_config.py:107 (naming only, no resolving code)"
+    },
+    {
+      "id": "fk_leave_leavecarryforwardconfig_leave_plan_config_id",
+      "source": "public.leave_leaveplanleavetypeconfig",
+      "target": "public.leave_leavecarryforwardconfig",
+      "cardinality": "1:1",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "leave_plan_config_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_leavecarryforwardconfig"
+      ],
+      "docCardinality": "1:1",
+      "enforcement": "DB FK (on_delete=CASCADE)"
+    },
+    {
+      "id": "fk_leave_leavecarryforwardconfig_carry_to_leave_type_id",
+      "source": "public.leave_leavetype",
+      "target": "public.leave_leavecarryforwardconfig",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "carry_to_leave_type_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "SET_NULL",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_leavecarryforwardconfig"
+      ],
+      "docCardinality": "N:1",
+      "enforcement": "DB FK (on_delete=SET_NULL)"
+    },
+    {
+      "id": "fk_leave_leavequota_leave_type_id",
+      "source": "public.leave_leavetype",
+      "target": "public.leave_leavequota",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "leave_type_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_leavequota"
+      ],
+      "docCardinality": "N:1",
+      "enforcement": "DB FK (on_delete=CASCADE)"
+    },
+    {
+      "id": "fk_leave_employeeleavebalance_employee_id",
+      "source": "public.account_employee",
+      "target": "public.leave_employeeleavebalance",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "employee_id",
+      "targetColumn": "employee_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_employeeleavebalance"
+      ],
+      "docCardinality": "N:1",
+      "enforcement": "DB FK (on_delete=CASCADE)"
+    },
+    {
+      "id": "fk_leave_employeeleavebalance_leave_type_id",
+      "source": "public.leave_leavetype",
+      "target": "public.leave_employeeleavebalance",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "leave_type_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_employeeleavebalance"
+      ],
+      "docCardinality": "N:1",
+      "enforcement": "DB FK (on_delete=CASCADE)"
+    },
+    {
+      "id": "fk_leave_employeeleavebalance_leave_plan_id",
+      "source": "public.leave_leaveplan",
+      "target": "public.leave_employeeleavebalance",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "leave_plan_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_employeeleavebalance"
+      ],
+      "docCardinality": "N:1",
+      "enforcement": "DB FK (on_delete=CASCADE)"
+    },
+    {
+      "id": "leave_balance_employee_tenant_fk",
+      "source": "public.account_employee",
+      "target": "public.leave_employeeleavebalance",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "(tenant_id, employee_id)",
+      "targetColumn": "(tenant_id, employee_id)",
+      "enforced": true,
+      "constraintName": "leave_balance_employee_tenant_fk",
+      "onDelete": "NO ACTION",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_employeeleavebalance"
+      ],
+      "docCardinality": "N:1",
+      "enforcement": "DB composite FK leave_balance_employee_tenant_fk (RunSQL, NO ACTION, deferred, MATCH SIMPLE): leave/migrations/0089_leave_tenant_consistency.py:13"
+    },
+    {
+      "id": "leave_balance_leave_type_tenant_fk",
+      "source": "public.leave_leavetype",
+      "target": "public.leave_employeeleavebalance",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "(tenant_id, id)",
+      "targetColumn": "(tenant_id, leave_type_id)",
+      "enforced": true,
+      "constraintName": "leave_balance_leave_type_tenant_fk",
+      "onDelete": null,
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_employeeleavebalance"
+      ],
+      "docCardinality": "N:1",
+      "enforcement": "DB composite FK leave_balance_leave_type_tenant_fk (RunSQL): leave/migrations/0089_leave_tenant_consistency.py:14"
+    },
+    {
+      "id": "fk_leave_employeeleavelog_employee_id",
+      "source": "public.account_employee",
+      "target": "public.leave_employeeleavelog",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "employee_id",
+      "targetColumn": "employee_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_employeeleavelog"
+      ],
+      "docCardinality": "N:1",
+      "enforcement": "DB FK (on_delete=CASCADE)"
+    },
+    {
+      "id": "fk_leave_employeeleavelog_is_approved_by_id",
+      "source": "public.account_employee",
+      "target": "public.leave_employeeleavelog",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "employee_id",
+      "targetColumn": "is_approved_by_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_employeeleavelog"
+      ],
+      "docCardinality": "N:1 each",
+      "enforcement": "DB FK (on_delete=CASCADE)"
+    },
+    {
+      "id": "fk_leave_employeeleavelog_is_rejected_by_id",
+      "source": "public.account_employee",
+      "target": "public.leave_employeeleavelog",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "employee_id",
+      "targetColumn": "is_rejected_by_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_employeeleavelog"
+      ],
+      "docCardinality": "N:1 each",
+      "enforcement": "DB FK (on_delete=CASCADE)"
+    },
+    {
+      "id": "fk_leave_employeeleavelog_is_cancelled_by_id",
+      "source": "public.account_employee",
+      "target": "public.leave_employeeleavelog",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "employee_id",
+      "targetColumn": "is_cancelled_by_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_employeeleavelog"
+      ],
+      "docCardinality": "N:1 each",
+      "enforcement": "DB FK (on_delete=CASCADE)"
+    },
+    {
+      "id": "fk_leave_employeeleavelog_leave_type_id",
+      "source": "public.leave_leavetype",
+      "target": "public.leave_employeeleavelog",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "leave_type_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_employeeleavelog"
+      ],
+      "docCardinality": "N:1",
+      "enforcement": "DB FK (on_delete=CASCADE)"
+    },
+    {
+      "id": "fk_leave_employeeleavelog_leave_plan_id",
+      "source": "public.leave_leaveplan",
+      "target": "public.leave_employeeleavelog",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "leave_plan_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "SET_NULL",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_employeeleavelog"
+      ],
+      "docCardinality": "N:1",
+      "enforcement": "DB FK (on_delete=SET_NULL)"
+    },
+    {
+      "id": "fk_leave_employeeleavelog_split_from_id",
+      "source": "public.leave_employeeleavelog",
+      "target": "public.leave_employeeleavelog",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "split_from_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_employeeleavelog"
+      ],
+      "docCardinality": "N:1 (self)",
+      "enforcement": "DB FK (on_delete=CASCADE)"
+    },
+    {
+      "id": "leave_log_employee_tenant_fk",
+      "source": "public.account_employee",
+      "target": "public.leave_employeeleavelog",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "employee_id",
+      "targetColumn": "(tenant_id, employee_id)",
+      "enforced": true,
+      "constraintName": "leave_log_employee_tenant_fk",
+      "onDelete": null,
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_employeeleavelog"
+      ],
+      "docCardinality": "N:1",
+      "enforcement": "DB composite FK leave_log_employee_tenant_fk: leave/migrations/0089_leave_tenant_consistency.py:15"
+    },
+    {
+      "id": "leave_log_leave_type_tenant_fk",
+      "source": "public.leave_leavetype",
+      "target": "public.leave_employeeleavelog",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "(tenant_id, id)",
+      "targetColumn": "(tenant_id, leave_type_id)",
+      "enforced": true,
+      "constraintName": "leave_log_leave_type_tenant_fk",
+      "onDelete": null,
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_employeeleavelog"
+      ],
+      "docCardinality": "N:1",
+      "enforcement": "DB composite FK leave_log_leave_type_tenant_fk: leave/migrations/0089_leave_tenant_consistency.py:16"
+    },
+    {
+      "id": "logical_leave_employeeleavelog_people_to_notify",
+      "source": "public.account_employee",
+      "target": "public.leave_employeeleavelog",
+      "cardinality": "m:n",
+      "kind": "logical_relationship",
+      "sourceColumn": "team_member_id",
+      "targetColumn": "people_to_notify[]",
+      "enforced": false,
+      "constraintName": null,
+      "onDelete": null,
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_employeeleavelog"
+      ],
+      "docCardinality": "N:M",
+      "enforcement": "Logical only (no FK): leave/tasks.py:268"
+    },
+    {
+      "id": "logical_leave_employeeleavelog_reporting_manager_id",
+      "source": "public.account_employee",
+      "target": "public.leave_employeeleavelog",
+      "cardinality": "1:n",
+      "kind": "logical_relationship",
+      "sourceColumn": "team_member_id",
+      "targetColumn": "reporting_manager_id",
+      "enforced": false,
+      "constraintName": null,
+      "onDelete": null,
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_employeeleavelog"
+      ],
+      "docCardinality": "N:1",
+      "enforcement": "Logical only (no FK): leave/services/partial_cancel.py:27 (inferred from leave/services/leave_change_notifications.py:45 semantics)"
+    },
+    {
+      "id": "fk_leave_employeeleavelog_attachments_employeeleavelog_id",
+      "source": "public.leave_employeeleavelog",
+      "target": "public.leave_employeeleavelog_attachments",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "employeeleavelog_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_employeeleavelog_attachments"
+      ],
+      "docCardinality": "N:1",
+      "enforcement": "DB FK (on_delete=CASCADE)"
+    },
+    {
+      "id": "fk_leave_employeeleavelog_attachments_file_id",
+      "source": "public.leave_file",
+      "target": "public.leave_employeeleavelog_attachments",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "file_id",
+      "targetColumn": "file_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_employeeleavelog_attachments"
+      ],
+      "docCardinality": "N:1",
+      "enforcement": "DB FK (on_delete=CASCADE)"
+    },
+    {
+      "id": "fk_employee_leave_balance_history_employee_id",
+      "source": "public.account_employee",
+      "target": "public.employee_leave_balance_history",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "employee_id",
+      "targetColumn": "employee_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "DO_NOTHING",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-employee_leave_balance_history"
+      ],
+      "docCardinality": "N:1",
+      "enforcement": "DB FK (on_delete=DO_NOTHING)"
+    },
+    {
+      "id": "fk_employee_leave_balance_history_performed_by_id",
+      "source": "public.account_employee",
+      "target": "public.employee_leave_balance_history",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "employee_id",
+      "targetColumn": "performed_by_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "DO_NOTHING",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-employee_leave_balance_history"
+      ],
+      "docCardinality": "N:1",
+      "enforcement": "DB FK (on_delete=DO_NOTHING)"
+    },
+    {
+      "id": "fk_employee_leave_balance_history_leave_type_id",
+      "source": "public.leave_leavetype",
+      "target": "public.employee_leave_balance_history",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "leave_type_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "DO_NOTHING",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-employee_leave_balance_history"
+      ],
+      "docCardinality": "N:1",
+      "enforcement": "DB FK (on_delete=DO_NOTHING)"
+    },
+    {
+      "id": "fk_employee_leave_balance_history_leave_plan_id",
+      "source": "public.leave_leaveplan",
+      "target": "public.employee_leave_balance_history",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "leave_plan_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "DO_NOTHING",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-employee_leave_balance_history"
+      ],
+      "docCardinality": "N:1",
+      "enforcement": "DB FK (on_delete=DO_NOTHING)"
+    },
+    {
+      "id": "fk_employee_leave_balance_history_leave_log_id",
+      "source": "public.leave_employeeleavelog",
+      "target": "public.employee_leave_balance_history",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "leave_log_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "DO_NOTHING",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-employee_leave_balance_history"
+      ],
+      "docCardinality": "N:1",
+      "enforcement": "DB FK (on_delete=DO_NOTHING)"
+    },
+    {
+      "id": "fk_employee_leave_balance_history_accrual_log_id",
+      "source": "public.leave_accruallog",
+      "target": "public.employee_leave_balance_history",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "accrual_log_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "DO_NOTHING",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-employee_leave_balance_history"
+      ],
+      "docCardinality": "N:1",
+      "enforcement": "DB FK (on_delete=DO_NOTHING)"
+    },
+    {
+      "id": "fk_leave_request_action_log_leave_log_id",
+      "source": "public.leave_employeeleavelog",
+      "target": "public.leave_request_action_log",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "leave_log_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_request_action_log"
+      ],
+      "docCardinality": "N:1",
+      "enforcement": "DB FK (on_delete=CASCADE)"
+    },
+    {
+      "id": "fk_leave_request_action_log_performed_by_id",
+      "source": "public.account_employee",
+      "target": "public.leave_request_action_log",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "employee_id",
+      "targetColumn": "performed_by_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "SET_NULL",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_request_action_log"
+      ],
+      "docCardinality": "N:1",
+      "enforcement": "DB FK (on_delete=SET_NULL)"
+    },
+    {
+      "id": "fk_leave_request_action_log_original_actor_id",
+      "source": "public.account_employee",
+      "target": "public.leave_request_action_log",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "employee_id",
+      "targetColumn": "original_actor_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "SET_NULL",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_request_action_log"
+      ],
+      "docCardinality": "N:1",
+      "enforcement": "DB FK (on_delete=SET_NULL)"
+    },
+    {
+      "id": "fk_leave_compoffcreditrequest_employee_id",
+      "source": "public.account_employee",
+      "target": "public.leave_compoffcreditrequest",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "employee_id",
+      "targetColumn": "employee_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_compoffcreditrequest"
+      ],
+      "docCardinality": "N:1",
+      "enforcement": "DB FK (on_delete=CASCADE)"
+    },
+    {
+      "id": "fk_leave_compoffcreditrequest_approved_by_id",
+      "source": "public.account_employee",
+      "target": "public.leave_compoffcreditrequest",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "employee_id",
+      "targetColumn": "approved_by_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_compoffcreditrequest"
+      ],
+      "docCardinality": "N:1 each",
+      "enforcement": "DB FK (on_delete=CASCADE)"
+    },
+    {
+      "id": "fk_leave_compoffcreditrequest_rejected_by_id",
+      "source": "public.account_employee",
+      "target": "public.leave_compoffcreditrequest",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "employee_id",
+      "targetColumn": "rejected_by_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_compoffcreditrequest"
+      ],
+      "docCardinality": "N:1 each",
+      "enforcement": "DB FK (on_delete=CASCADE)"
+    },
+    {
+      "id": "fk_leave_compoffcreditrequest_cancelled_by_id",
+      "source": "public.account_employee",
+      "target": "public.leave_compoffcreditrequest",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "employee_id",
+      "targetColumn": "cancelled_by_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_compoffcreditrequest"
+      ],
+      "docCardinality": "N:1 each",
+      "enforcement": "DB FK (on_delete=CASCADE)"
+    },
+    {
+      "id": "fk_leave_compoffcreditrequest_leave_type_id",
+      "source": "public.leave_leavetype",
+      "target": "public.leave_compoffcreditrequest",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "leave_type_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_compoffcreditrequest"
+      ],
+      "docCardinality": "N:1",
+      "enforcement": "DB FK (on_delete=CASCADE)"
+    },
+    {
+      "id": "compoff_employee_tenant_fk",
+      "source": "public.account_employee",
+      "target": "public.leave_compoffcreditrequest",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "employee_id",
+      "targetColumn": "(tenant_id, employee_id)",
+      "enforced": true,
+      "constraintName": "compoff_employee_tenant_fk",
+      "onDelete": null,
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_compoffcreditrequest"
+      ],
+      "docCardinality": "N:1",
+      "enforcement": "DB composite FK compoff_employee_tenant_fk: leave/migrations/0092_compoff_tenant_consistency.py:19"
+    },
+    {
+      "id": "compoff_leave_type_tenant_fk",
+      "source": "public.leave_leavetype",
+      "target": "public.leave_compoffcreditrequest",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "(tenant_id, leave_type_id)",
+      "enforced": true,
+      "constraintName": "compoff_leave_type_tenant_fk",
+      "onDelete": null,
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_compoffcreditrequest"
+      ],
+      "docCardinality": "N:1",
+      "enforcement": "DB composite FK compoff_leave_type_tenant_fk: leave/migrations/0092_compoff_tenant_consistency.py:20"
+    },
+    {
+      "id": "fk_leave_compoffcreditrequest_attachments_compoffcreditrequest_id",
+      "source": "public.leave_compoffcreditrequest",
+      "target": "public.leave_compoffcreditrequest_attachments",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "compoffcreditrequest_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_compoffcreditrequest_attachments"
+      ],
+      "docCardinality": "N:1",
+      "enforcement": "DB FK (on_delete=CASCADE)"
+    },
+    {
+      "id": "fk_leave_compoffcreditrequest_attachments_file_id",
+      "source": "public.leave_file",
+      "target": "public.leave_compoffcreditrequest_attachments",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "file_id",
+      "targetColumn": "file_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_compoffcreditrequest_attachments"
+      ],
+      "docCardinality": "N:1",
+      "enforcement": "DB FK (on_delete=CASCADE)"
+    },
+    {
+      "id": "logical_leave_accruallog_employee_id",
+      "source": "public.account_employee",
+      "target": "public.leave_accruallog",
+      "cardinality": "1:n",
+      "kind": "logical_relationship",
+      "sourceColumn": "employee_id",
+      "targetColumn": "employee_id",
+      "enforced": false,
+      "constraintName": null,
+      "onDelete": null,
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_accruallog"
+      ],
+      "docCardinality": "N:1",
+      "enforcement": "Logical only (no FK): leave/services/leave_accrual_engine.py:1290"
+    },
+    {
+      "id": "logical_leave_accruallog_leave_plan_id",
+      "source": "public.leave_leaveplan",
+      "target": "public.leave_accruallog",
+      "cardinality": "1:n",
+      "kind": "logical_relationship",
+      "sourceColumn": "leave_plan_id",
+      "targetColumn": "leave_plan_id",
+      "enforced": false,
+      "constraintName": null,
+      "onDelete": null,
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_accruallog"
+      ],
+      "docCardinality": "N:1",
+      "enforcement": "Logical only (no FK): leave/services/leave_accrual_engine.py:1291"
+    },
+    {
+      "id": "logical_leave_accruallog_leave_type_id",
+      "source": "public.leave_leavetype",
+      "target": "public.leave_accruallog",
+      "cardinality": "1:n",
+      "kind": "logical_relationship",
+      "sourceColumn": "leave_type_id",
+      "targetColumn": "leave_type_id",
+      "enforced": false,
+      "constraintName": null,
+      "onDelete": null,
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_accruallog"
+      ],
+      "docCardinality": "N:1",
+      "enforcement": "Logical only (no FK): leave/services/leave_accrual_engine.py:1292"
+    },
+    {
+      "id": "fk_leave_yearendprocessing_leave_plan_id",
+      "source": "public.leave_leaveplan",
+      "target": "public.leave_yearendprocessing",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "leave_plan_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_yearendprocessing"
+      ],
+      "docCardinality": "N:1",
+      "enforcement": "DB FK (on_delete=CASCADE)"
+    },
+    {
+      "id": "fk_leave_yearendprocessing_initiated_by_id",
+      "source": "public.account_employee",
+      "target": "public.leave_yearendprocessing",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "employee_id",
+      "targetColumn": "initiated_by_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_yearendprocessing"
+      ],
+      "docCardinality": "N:1",
+      "enforcement": "DB FK (on_delete=CASCADE)"
+    },
+    {
+      "id": "fk_leave_yearendprocessing_last_modified_by_id",
+      "source": "public.account_employee",
+      "target": "public.leave_yearendprocessing",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "employee_id",
+      "targetColumn": "last_modified_by_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_yearendprocessing"
+      ],
+      "docCardinality": "N:1",
+      "enforcement": "DB FK (on_delete=CASCADE)"
+    },
+    {
+      "id": "fk_leave_employeeyearendbalance_year_end_process_id",
+      "source": "public.leave_yearendprocessing",
+      "target": "public.leave_employeeyearendbalance",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "year_end_process_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_employeeyearendbalance"
+      ],
+      "docCardinality": "N:1",
+      "enforcement": "DB FK (on_delete=CASCADE)"
+    },
+    {
+      "id": "fk_leave_employeeyearendbalance_leave_plan_id",
+      "source": "public.leave_leaveplan",
+      "target": "public.leave_employeeyearendbalance",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "leave_plan_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_employeeyearendbalance"
+      ],
+      "docCardinality": "N:1",
+      "enforcement": "DB FK (on_delete=CASCADE)"
+    },
+    {
+      "id": "fk_leave_employeeyearendbalance_employee_id",
+      "source": "public.account_employee",
+      "target": "public.leave_employeeyearendbalance",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "employee_id",
+      "targetColumn": "employee_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_employeeyearendbalance"
+      ],
+      "docCardinality": "N:1",
+      "enforcement": "DB FK (on_delete=CASCADE)"
+    },
+    {
+      "id": "fk_leave_employeeyearendbalance_last_modified_by_id",
+      "source": "public.account_employee",
+      "target": "public.leave_employeeyearendbalance",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "employee_id",
+      "targetColumn": "last_modified_by_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "SET_NULL",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_employeeyearendbalance"
+      ],
+      "docCardinality": "N:1",
+      "enforcement": "DB FK (on_delete=SET_NULL)"
+    },
+    {
+      "id": "fk_leave_leavetypeyearendtransaction_employee_balance_id",
+      "source": "public.leave_employeeyearendbalance",
+      "target": "public.leave_leavetypeyearendtransaction",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "employee_balance_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_leavetypeyearendtransaction"
+      ],
+      "docCardinality": "N:1",
+      "enforcement": "DB FK (on_delete=CASCADE)"
+    },
+    {
+      "id": "fk_leave_leavetypeyearendtransaction_leave_type_id",
+      "source": "public.leave_leavetype",
+      "target": "public.leave_leavetypeyearendtransaction",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "leave_type_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_leavetypeyearendtransaction"
+      ],
+      "docCardinality": "N:1",
+      "enforcement": "DB FK (on_delete=CASCADE)"
+    },
+    {
+      "id": "fk_leave_leavetypeyearendtransaction_carryover_to_id",
+      "source": "public.leave_leavetype",
+      "target": "public.leave_leavetypeyearendtransaction",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "carryover_to_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_leavetypeyearendtransaction"
+      ],
+      "docCardinality": "N:1",
+      "enforcement": "DB FK (on_delete=CASCADE)"
+    },
+    {
+      "id": "fk_leave_leavetypeyearendtransaction_last_modified_by_id",
+      "source": "public.account_employee",
+      "target": "public.leave_leavetypeyearendtransaction",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "employee_id",
+      "targetColumn": "last_modified_by_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "SET_NULL",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_leavetypeyearendtransaction"
+      ],
+      "docCardinality": "N:1",
+      "enforcement": "DB FK (on_delete=SET_NULL)"
+    },
+    {
+      "id": "fk_holiday_regionholiday_region_id",
+      "source": "public.holiday_region",
+      "target": "public.holiday_regionholiday",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "region_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-holiday_regionholiday"
+      ],
+      "docCardinality": "N:1",
+      "enforcement": "DB FK (on_delete=CASCADE)"
+    },
+    {
+      "id": "fk_account_employee_leave_plan_id",
+      "source": "public.leave_leaveplan",
+      "target": "public.account_employee",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "leave_plan_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "SET_NULL",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-account_employee"
+      ],
+      "docCardinality": "N:1",
+      "enforcement": "DB FK (on_delete=SET_NULL)"
+    },
+    {
+      "id": "fk_account_employee_wfh_admin_setting_id",
+      "source": "public.wfh_admin_setting",
+      "target": "public.account_employee",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "wfh_admin_setting_id",
+      "targetColumn": "wfh_admin_setting_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "SET_NULL",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-account_employee"
+      ],
+      "docCardinality": "N:1",
+      "enforcement": "DB FK (on_delete=SET_NULL)"
+    },
+    {
+      "id": "logical_account_employee_tenant_id_reporting_manager_id",
+      "source": "public.account_employee",
+      "target": "public.account_employee",
+      "cardinality": "1:n",
+      "kind": "logical_relationship",
+      "sourceColumn": "(tenant_id, team_member_id)",
+      "targetColumn": "(tenant_id, reporting_manager_id)",
+      "enforced": false,
+      "constraintName": null,
+      "onDelete": null,
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-account_employee"
+      ],
+      "docCardinality": "N:1",
+      "enforcement": "Logical only (no FK): attendance/helpers/wfh_application.py:57-61, leave/utils/leave_utils.py:136-140, leave/services/leave_change_notifications.py:44-47"
+    },
+    {
+      "id": "logical_account_employee_tenant_id_role",
+      "source": "public.account_role",
+      "target": "public.account_employee",
+      "cardinality": "1:n",
+      "kind": "logical_relationship",
+      "sourceColumn": "(tenant_id, name)",
+      "targetColumn": "(tenant_id, role)",
+      "enforced": false,
+      "constraintName": null,
+      "onDelete": null,
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-account_employee"
+      ],
+      "docCardinality": "N:1",
+      "enforcement": "Logical only (no FK): leave/utils/leave_utils.py:127, attendance/tasks.py:491, attendance/helpers/attendance_adjustment_approval.py:75-78, attendance/helpers/wfh_application.py:47"
+    },
+    {
+      "id": "fk_auditlog_logentry_content_type_id",
+      "source": "public.django_content_type",
+      "target": "public.auditlog_logentry",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "content_type_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-auditlog_logentry"
+      ],
+      "docCardinality": "N:1",
+      "enforcement": "DB FK (on_delete=CASCADE)"
+    },
+    {
+      "id": "fk_auditlog_logentry_actor_id",
+      "source": "public.auth_user",
+      "target": "public.auditlog_logentry",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "actor_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "SET_NULL",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-auditlog_logentry"
+      ],
+      "docCardinality": "N:1",
+      "enforcement": "DB FK (on_delete=SET_NULL)"
+    },
+    {
+      "id": "fk_auth_permission_content_type_id",
+      "source": "public.django_content_type",
+      "target": "public.auth_permission",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "content_type_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-auth_permission"
+      ],
+      "docCardinality": "N:1",
+      "enforcement": "DB FK (on_delete=CASCADE)"
+    },
+    {
+      "id": "fk_auth_group_permissions_group_id",
+      "source": "public.auth_group",
+      "target": "public.auth_group_permissions",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "group_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-auth_group_permissions"
+      ],
+      "docCardinality": "N:1",
+      "enforcement": "DB FK (on_delete=CASCADE)"
+    },
+    {
+      "id": "fk_auth_group_permissions_permission_id",
+      "source": "public.auth_permission",
+      "target": "public.auth_group_permissions",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "permission_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-auth_group_permissions"
+      ],
+      "docCardinality": "N:1",
+      "enforcement": "DB FK (on_delete=CASCADE)"
+    },
+    {
+      "id": "fk_auth_user_groups_user_id",
+      "source": "public.auth_user",
+      "target": "public.auth_user_groups",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "user_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-auth_user_groups"
+      ],
+      "docCardinality": "N:1",
+      "enforcement": "DB FK (on_delete=CASCADE)"
+    },
+    {
+      "id": "fk_auth_user_groups_group_id",
+      "source": "public.auth_group",
+      "target": "public.auth_user_groups",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "group_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-auth_user_groups"
+      ],
+      "docCardinality": "N:1",
+      "enforcement": "DB FK (on_delete=CASCADE)"
+    },
+    {
+      "id": "fk_auth_user_user_permissions_user_id",
+      "source": "public.auth_user",
+      "target": "public.auth_user_user_permissions",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "user_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-auth_user_user_permissions"
+      ],
+      "docCardinality": "N:1",
+      "enforcement": "DB FK (on_delete=CASCADE)"
+    },
+    {
+      "id": "fk_auth_user_user_permissions_permission_id",
+      "source": "public.auth_permission",
+      "target": "public.auth_user_user_permissions",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "permission_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-auth_user_user_permissions"
+      ],
+      "docCardinality": "N:1",
+      "enforcement": "DB FK (on_delete=CASCADE)"
+    },
+    {
+      "id": "fk_django_admin_log_user_id",
+      "source": "public.auth_user",
+      "target": "public.django_admin_log",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "user_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-django_admin_log"
+      ],
+      "docCardinality": "N:1",
+      "enforcement": "DB FK (on_delete=CASCADE)"
+    },
+    {
+      "id": "fk_django_admin_log_content_type_id",
+      "source": "public.django_content_type",
+      "target": "public.django_admin_log",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "content_type_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "SET_NULL",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-django_admin_log"
+      ],
+      "docCardinality": "N:1",
+      "enforcement": "DB FK (on_delete=SET_NULL)"
+    },
+    {
+      "id": "fk_leave_bulkuploadlog_file_id",
+      "source": "public.leave_file",
+      "target": "public.leave_bulkuploadlog",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "file_id",
+      "targetColumn": "file_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_bulkuploadlog"
+      ],
+      "docCardinality": "N:1",
+      "enforcement": "DB FK (on_delete=CASCADE)"
+    },
+    {
+      "id": "fk_leave_file_uploaded_by_id",
+      "source": "public.account_employee",
+      "target": "public.leave_file",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "employee_id",
+      "targetColumn": "uploaded_by_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "SET_NULL",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_file"
+      ],
+      "docCardinality": "N:1",
+      "enforcement": "DB FK (on_delete=SET_NULL)"
+    },
+    {
+      "id": "fk_audit_log_entry_actor_log_entry_id",
+      "source": "public.auditlog_logentry",
+      "target": "public.audit_log_entry_actor",
+      "cardinality": "1:1",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "id",
+      "targetColumn": "log_entry_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "CASCADE",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-audit_log_entry_actor"
+      ],
+      "docCardinality": "1:1",
+      "enforcement": "DB FK (on_delete=CASCADE)"
+    },
+    {
+      "id": "fk_audit_log_entry_actor_employee_actor_id",
+      "source": "public.account_employee",
+      "target": "public.audit_log_entry_actor",
+      "cardinality": "1:n",
+      "kind": "physical_foreign_key",
+      "sourceColumn": "employee_id",
+      "targetColumn": "employee_actor_id",
+      "enforced": true,
+      "constraintName": null,
+      "onDelete": "SET_NULL",
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-audit_log_entry_actor"
+      ],
+      "docCardinality": "N:1",
+      "enforcement": "DB FK (on_delete=SET_NULL)"
+    },
+    {
+      "id": "m2m_attendance_attendance_attendance_timeentry_via_attendance_attendance_adjusted_time_entries",
+      "source": "public.attendance_attendance",
+      "target": "public.attendance_timeentry",
+      "cardinality": "m:n",
+      "kind": "conceptual_many_to_many",
+      "junctionTable": "attendance_attendance_adjusted_time_entries",
+      "sourceColumn": "id",
+      "targetColumn": "id",
+      "enforced": false,
+      "constraintName": null,
+      "onDelete": null,
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-attendance_attendance_adjusted_time_entries"
+      ]
+    },
+    {
+      "id": "m2m_attendance_attendance_attendance_timeentry_via_attendance_attendance_time_entries",
+      "source": "public.attendance_attendance",
+      "target": "public.attendance_timeentry",
+      "cardinality": "m:n",
+      "kind": "conceptual_many_to_many",
+      "junctionTable": "attendance_attendance_time_entries",
+      "sourceColumn": "id",
+      "targetColumn": "id",
+      "enforced": false,
+      "constraintName": null,
+      "onDelete": null,
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-attendance_attendance_time_entries"
+      ]
+    },
+    {
+      "id": "m2m_leave_compoffcreditrequest_leave_file_via_leave_compoffcreditrequest_attachments",
+      "source": "public.leave_compoffcreditrequest",
+      "target": "public.leave_file",
+      "cardinality": "m:n",
+      "kind": "conceptual_many_to_many",
+      "junctionTable": "leave_compoffcreditrequest_attachments",
+      "sourceColumn": "id",
+      "targetColumn": "file_id",
+      "enforced": false,
+      "constraintName": null,
+      "onDelete": null,
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_compoffcreditrequest_attachments"
+      ]
+    },
+    {
+      "id": "m2m_leave_employeeleavelog_leave_file_via_leave_employeeleavelog_attachments",
+      "source": "public.leave_employeeleavelog",
+      "target": "public.leave_file",
+      "cardinality": "m:n",
+      "kind": "conceptual_many_to_many",
+      "junctionTable": "leave_employeeleavelog_attachments",
+      "sourceColumn": "id",
+      "targetColumn": "file_id",
+      "enforced": false,
+      "constraintName": null,
+      "onDelete": null,
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_employeeleavelog_attachments"
+      ]
+    },
+    {
+      "id": "m2m_leave_leaveaccrualconfig_leave_leavetype_via_leave_leaveaccrualconfig_restricted_leave_types",
+      "source": "public.leave_leaveaccrualconfig",
+      "target": "public.leave_leavetype",
+      "cardinality": "m:n",
+      "kind": "conceptual_many_to_many",
+      "junctionTable": "leave_leaveaccrualconfig_restricted_leave_types",
+      "sourceColumn": "id",
+      "targetColumn": "id",
+      "enforced": false,
+      "constraintName": null,
+      "onDelete": null,
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_leaveaccrualconfig_restricted_leave_types"
+      ]
+    },
+    {
+      "id": "m2m_leave_leaveapplicationrestrictionconfig_leave_leavetype_via_leave_leaveapplicationrestrictionconfig_cannot_be_availed_w3b41",
+      "source": "public.leave_leaveapplicationrestrictionconfig",
+      "target": "public.leave_leavetype",
+      "cardinality": "m:n",
+      "kind": "conceptual_many_to_many",
+      "junctionTable": "leave_leaveapplicationrestrictionconfig_cannot_be_availed_w3b41",
+      "sourceColumn": "id",
+      "targetColumn": "id",
+      "enforced": false,
+      "constraintName": null,
+      "onDelete": null,
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_leaveapplicationrestrictionconfig_cannot_be_availed_w3b41"
+      ]
+    },
+    {
+      "id": "m2m_leave_leaveapplicationrestrictionconfig_leave_leavetype_via_leave_leaveapplicationrestrictionconfig_unavailable_types",
+      "source": "public.leave_leaveapplicationrestrictionconfig",
+      "target": "public.leave_leavetype",
+      "cardinality": "m:n",
+      "kind": "conceptual_many_to_many",
+      "junctionTable": "leave_leaveapplicationrestrictionconfig_unavailable_types",
+      "sourceColumn": "id",
+      "targetColumn": "id",
+      "enforced": false,
+      "constraintName": null,
+      "onDelete": null,
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-leave_leaveapplicationrestrictionconfig_unavailable_types"
+      ]
+    },
+    {
+      "id": "m2m_wfh_request_leave_file_via_wfh_request_attachments",
+      "source": "public.wfh_request",
+      "target": "public.leave_file",
+      "cardinality": "m:n",
+      "kind": "conceptual_many_to_many",
+      "junctionTable": "wfh_request_attachments",
+      "sourceColumn": "wfh_request_id, wfh_type_id",
+      "targetColumn": "file_id",
+      "enforced": false,
+      "constraintName": null,
+      "onDelete": null,
+      "evidence": [
+        "current-db-arch/attendance-management-service-django.md#t-wfh_request_attachments"
+      ]
+    }
+  ],
+  "unresolved": [
+    "Data copy (no relationship stored): holiday_regionholiday <-> holiday_holiday: Copy into tenant calendar."
+  ]
+}
