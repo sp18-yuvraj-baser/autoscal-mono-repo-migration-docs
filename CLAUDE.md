@@ -4,6 +4,12 @@ This guide documents the architecture, design decisions, and step-by-step workfl
 
 Following this guide ensures any service (e.g., `job-service-node`, `attendance-management-service-django`, `auth-service-node`, `finance-service-node`, `calendar-schedular-backend`, `notification`) produces a consistent, production-grade ERD.
 
+## Migration Scope
+
+- `spark-assist-ai` is **out of scope** for the monolith migration. It stays as a separate service with its own database for now.
+- Do not merge its tables into the consolidated schema, and do not count them in consolidation totals or mapping registers.
+- Its ERD and architecture doc stay for reference only. Treat its tables as an external service when designing the single schema (cross-service ids such as `api_tenant.external_id` and `api_user.external_id` remain logical references).
+
 ---
 
 ## 1. Deliverables & Output Specification
